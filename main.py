@@ -14,8 +14,7 @@ if torch.cuda.is_available():
 filePaths = list(Path("marketData/XRPUSDT-5m-2020-23").glob("*.csv"))  # Adjust to your directory
 normData = load_and_normalize_csv(filePaths)
 
-print(normData.shape)
-
+# shape: (419239, 4)
 normData = normData.to_numpy()  # Convert DataFrame to NumPy
 inputSize = normData.shape[1]   # TODO This seems fishy
 print(f"Input size: {inputSize}")
