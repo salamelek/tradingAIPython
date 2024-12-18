@@ -10,7 +10,7 @@ def load_and_normalize_csv(file_paths):
     h -> h/o - 1
     l -> l/o - 1
     c -> c/o - 1
-    v -> unchanged (optional discussion)
+    v -> log(v + 1)
     """
     normalized_data = []
 
@@ -26,10 +26,11 @@ def load_and_normalize_csv(file_paths):
         df["h_norm"] = df["high"] / df["open"] - 1
         df["l_norm"] = df["low"] / df["open"] - 1
         df["c_norm"] = df["close"] / df["open"] - 1
-        df["v_norm"] = np.log(df["volume"] + 1)
+        # df["v_norm"] = np.log(df["volume"] + 1)
 
         # Select normalized columns
-        normalized_data.append(df[["h_norm", "l_norm", "c_norm", "v_norm"]])
+        # normalized_data.append(df[["h_norm", "l_norm", "c_norm", "v_norm"]])
+        normalized_data.append(df[["h_norm", "l_norm", "c_norm"]])
 
     # Combine all normalized data
     combined_data = pd.concat(normalized_data, ignore_index=True)

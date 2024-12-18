@@ -1,3 +1,4 @@
+from tqdm import tqdm
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -5,7 +6,6 @@ from torch.utils.data import DataLoader, TensorDataset
 
 
 class Autoencoder(nn.Module):
-    # TODO do i use ReLU?
     def __init__(self, inputSize, bottleneckSize):
         """
         Initialize the autoencoder model.
@@ -17,20 +17,21 @@ class Autoencoder(nn.Module):
         # Encoder
         self.encoder = nn.Sequential(
             nn.Linear(inputSize, 256),
-            nn.ReLU(),
+            nn.Tanh(),
             nn.Linear(256, 128),
-            nn.ReLU(),
+            nn.Tanh(),
             nn.Linear(128, bottleneckSize),
-            nn.ReLU()
+            nn.Tanh()
         )
 
         # Decoder
         self.decoder = nn.Sequential(
             nn.Linear(bottleneckSize, 128),
-            nn.ReLU(),
+            nn.Tanh(),
             nn.Linear(128, 256),
-            nn.ReLU(),
-            nn.Linear(256, inputSize)
+            nn.Tanh(),
+            nn.Linear(256, inputSize),
+            nn.Tanh()
         )
 
     def forward(self, x):
@@ -39,7 +40,7 @@ class Autoencoder(nn.Module):
         return encoded, decoded
 
 
-def trainAutoencoder(model, data, epochs=20, batchSize=32, lr=0.001, device='cpu'):
+def trainAutoencoder(model, data, epochs, batchSize, lr, device='cpu'):
     """
     Train the autoencoder.
     :param model: Autoencoder model
@@ -62,7 +63,8 @@ def trainAutoencoder(model, data, epochs=20, batchSize=32, lr=0.001, device='cpu
     model.train()
     for epoch in range(epochs):
         total_loss = 0
-        for batch in loader:
+        pbar = tqdm(loader, desc=f"Training Epoch {epoch + 1}/{epochs}")
+        for batch in pbar:
             batch = batch[0].to(device)
             optimizer.zero_grad()
             _, reconstructed = model(batch)
@@ -70,4 +72,8 @@ def trainAutoencoder(model, data, epochs=20, batchSize=32, lr=0.001, device='cpu
             loss.backward()
             optimizer.step()
             total_loss += loss.item()
-        print(f"Epoch {epoch + 1}, Loss: {total_loss / len(loader)}")
+            pbar.set_postfix(Batch_Loss=loss.item())
+
+        # Print final epoch loss after progress bar
+        avg_loss = total_loss / len(loader)
+        tqdm.write(f"Epoch {epoch + 1}/{epochs}, Loss: {avg_loss:.6f}")

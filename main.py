@@ -1,5 +1,4 @@
 from pathlib import Path
-import torch
 
 from dataGetter import *
 from autoencoder import *
@@ -14,11 +13,26 @@ if torch.cuda.is_available():
 filePaths = list(Path("marketData/XRPUSDT-5m-2020-23").glob("*.csv"))  # Adjust to your directory
 normData = load_and_normalize_csv(filePaths)
 
-# shape: (419239, 4)
-normData = normData.to_numpy()  # Convert DataFrame to NumPy
-inputSize = normData.shape[1]   # TODO This seems fishy
-print(f"Input size: {inputSize}")
+normData = normData.to_numpy()
+inputCandlesNum = 100
 bottleneckSize = 20
 
-autoencoder = Autoencoder(inputSize=inputSize, bottleneckSize=bottleneckSize)
-trainAutoencoder(autoencoder, normData, epochs=50, batchSize=64, device=device)
+# reshape the array for autoencoder training
+nSamples = normData.shape[0] - inputCandlesNum + 1
+nFeatures = normData.shape[1] * inputCandlesNum
+slidingWindow = np.lib.stride_tricks.sliding_window_view(normData, window_shape=(inputCandlesNum, normData.shape[1]))
+reshapedWindow = slidingWindow.reshape(nSamples, nFeatures)
+
+autoencoder = Autoencoder(
+    inputSize=reshapedWindow.shape[1],
+    bottleneckSize=bottleneckSize
+)
+
+trainAutoencoder(
+    autoencoder,
+    reshapedWindow,
+    epochs=10,
+    batchSize=100,
+    lr=0.0001,
+    device=device
+)
