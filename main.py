@@ -7,7 +7,10 @@ from autoencoder import *
 # check for GPU for faster yes
 device = "cpu"
 if torch.cuda.is_available():
+    print("GPU found")
     device = "cuda"
+else:
+    print("GPU not found, using CPU")
 
 
 filePaths = list(Path("marketData/XRPUSDT-5m-2020-23").glob("*.csv"))  # Adjust to your directory
