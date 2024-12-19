@@ -37,3 +37,13 @@ def load_and_normalize_csv(file_paths):
     return combined_data
 
 
+def getShapedData(filePaths, candlesNum):
+    data = load_and_normalize_csv(filePaths)
+    data = data.to_numpy()
+
+    nSamples = data.shape[0] - candlesNum + 1
+    nFeatures = data.shape[1] * candlesNum
+    slidingWindow = np.lib.stride_tricks.sliding_window_view(data, window_shape=(candlesNum, data.shape[1]))
+    reshapedWindow = slidingWindow.reshape(nSamples, nFeatures)
+
+    return reshapedWindow

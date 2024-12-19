@@ -13,27 +13,26 @@ else:
     print("GPU not found, using CPU")
 
 
-filePaths = list(Path("marketData/XRPUSDT-5m-2020-23").glob("*.csv"))  # Adjust to your directory
-normData = load_and_normalize_csv(filePaths)
+trainFilePaths = list(Path("marketData/XRPUSDT-5m-2020-23").glob("*.csv"))
+valFilePaths = list(Path("marketData/XRPUSDT-5m-2024").glob("*.csv"))
 
-normData = normData.to_numpy()
 inputCandlesNum = 100
 bottleneckSize = 20
 
-# reshape the array for autoencoder training
-nSamples = normData.shape[0] - inputCandlesNum + 1
-nFeatures = normData.shape[1] * inputCandlesNum
-slidingWindow = np.lib.stride_tricks.sliding_window_view(normData, window_shape=(inputCandlesNum, normData.shape[1]))
-reshapedWindow = slidingWindow.reshape(nSamples, nFeatures)
+print("Getting data...")
+trainData = getShapedData(trainFilePaths, inputCandlesNum)
+valData = getShapedData(valFilePaths, inputCandlesNum)
+
 
 autoencoder = Autoencoder(
-    inputSize=reshapedWindow.shape[1],
+    inputSize=trainData.shape[1],
     bottleneckSize=bottleneckSize
 )
 
 trainAutoencoder(
     autoencoder,
-    reshapedWindow,
+    trainData,
+    valData,
     epochs=10,
     batchSize=100,
     lr=0.0001,
