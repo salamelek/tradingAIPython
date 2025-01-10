@@ -28,3 +28,8 @@ autoencoder = Autoencoder(inputSize=trainData.shape[1], bottleneckSize=bottlenec
 
 autoencoder.load_state_dict(torch.load("autoencoder100-20", weights_only=True))
 autoencoder.eval()
+
+
+compressedTrain = autoencoder.predict(trainData)
+print(trainData)
+print(compressedTrain)
