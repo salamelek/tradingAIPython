@@ -5,6 +5,7 @@ import numpy as np
 def load_and_normalize_csv(file_paths):
     """
     Load and normalize OHLCV data from multiple CSV files.
+    (Volume not included anymore)
 
     Normalization:
     h -> h/o - 1
@@ -38,6 +39,16 @@ def load_and_normalize_csv(file_paths):
 
 
 def getShapedData(filePaths, candlesNum):
+    """
+    Reshapes the data from the files into a sliding window of candlesNum candles.
+    Returns it as a 2D numpy array.
+
+    [
+        [h1, l1, c1, h2, l2, c2, ...],
+        [h2, l2, c2, h3, l3, c3, ...],
+        ...,
+    ]
+    """
     data = load_and_normalize_csv(filePaths)
     data = data.to_numpy()
 
