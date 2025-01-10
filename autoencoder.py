@@ -15,6 +15,7 @@ class Autoencoder(nn.Module):
 
         # Encoder
         self.encoder = nn.Sequential(
+            # TODO maybe better shape?
             nn.Linear(inputSize, 256),
             nn.Tanh(),
             nn.Linear(256, 128),
