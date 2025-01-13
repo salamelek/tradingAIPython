@@ -19,6 +19,7 @@ valFilePaths = list(Path("marketData/XRPUSDT-5m-2024").glob("*.csv"))
 
 # some autoencoder parameters
 inputCandlesNum = 100
+normCandleFeaturesNum = 3
 bottleneckSize = 5
 
 # get the data

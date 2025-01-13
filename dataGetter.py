@@ -24,9 +24,9 @@ def load_and_normalize_csv(file_paths):
             raise ValueError(f"Missing required columns in {file_path}")
 
         # Apply normalization
-        df["h_norm"] = df["high"] / df["open"] - 1
-        df["l_norm"] = df["low"] / df["open"] - 1
-        df["c_norm"] = df["close"] / df["open"] - 1
+        df["h_norm"] = np.tanh(df["high"] / df["open"] - 1)
+        df["l_norm"] = np.tanh(df["low"] / df["open"] - 1)
+        df["c_norm"] = np.tanh(df["close"] / df["open"] - 1)
         # df["v_norm"] = np.log(df["volume"] + 1)
 
         # Select normalized columns
@@ -35,6 +35,9 @@ def load_and_normalize_csv(file_paths):
 
     # Combine all normalized data
     combined_data = pd.concat(normalized_data, ignore_index=True)
+
+    print(combined_data)
+
     return combined_data
 
 
