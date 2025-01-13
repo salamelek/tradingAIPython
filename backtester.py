@@ -1,93 +1,44 @@
-import backtrader as bt
-import numpy as np
+from backtesting import Backtest, Strategy
+from pathlib import Path
+import pandas as pd
+from dataGetter import *
 
 
-class MyStrategy(bt.Strategy):
-    params = (
-        ("nCandles", 100),  # Number of candles to normalize
-    )
+def bot_predict(input_data):
+    close = input_data["close"][-1]
+    perc = close * 0.01
+    return 1, close + perc, close - perc
 
-    def __init__(self):
-        self.candles = []  # To store the last n candles for normalization
 
-    def normalize_candle(self, high, low, close, open_):
-        """
-        Normalize a single candle.
-        """
-
-        return np.tanh([
-            high / open_ - 1,
-            low / open_ - 1,
-            close / open_ - 1,
-        ])
+class BotStrategy(Strategy):
+    def init(self):
+        self.bot_input = []
 
     def next(self):
-        # Collect the last n candles
-        self.candles.append({
-            "open": self.datas[0].open[0],
-            "high": self.datas[0].high[0],
-            "low": self.datas[0].low[0],
-            "close": self.datas[0].close[0],
-        })
+        if len(self.data.Close) < 100:
+            return
 
-        if len(self.candles) < self.params.nCandles:
-            return  # Wait until we have enough candles
+        last_100_candles = {
+            'open': self.data.Open[-100:],
+            'high': self.data.High[-100:],
+            'low': self.data.Low[-100:],
+            'close': self.data.Close[-100:],
+        }
 
-        # Normalize the last n candles
-        normalized_candles = [
-            self.normalize_candle(c["high"], c["low"], c["close"], c["open"])
-            for c in self.candles
-        ]
+        side, tp, sl = bot_predict(last_100_candles)
 
-        # Call the AI trading bot with normalized candles
-        signal, stop_loss, take_profit = my_ai_trading_bot(normalized_candles)
+        if side == 0:
+            return
 
-        # Execute the bot's decision
-        if signal == 1:
-            self.buy()
-        elif signal == -1:
-            self.sell()
-
-        # Remove the oldest candle to keep the list size to nCandles
-        self.candles.pop(0)
+        # Execute the trade based on the bot's signal
+        if side == 1:
+            self.buy(size=10, sl=sl, tp=tp)
+        elif side == -1:
+            self.sell(size=10, sl=sl, tp=tp)
 
 
-# Example `my_ai_trading_bot` function (replace with your implementation)
-def my_ai_trading_bot(normalized_candles):
-    """
-    Simulate AI trading bot decision.
-    Replace this with your actual bot's logic.
-    """
-    # Example logic: randomly decide to buy, sell, or hold
-    import random
-    signal = random.choice(["buy", "sell", "hold"])
-    stop_loss = 0.95  # Example stop-loss level
-    take_profit = 1.05  # Example take-profit level
-    return signal, stop_loss, take_profit
+data = getDataBacktester(list(Path("marketData/XRPUSDT-5m-2024").glob("*.csv")))
 
-
-# Load your data into a Pandas DataFrame
-import pandas as pd
-
-# Replace this with your actual historical data
-data = pd.DataFrame({
-    "datetime": pd.date_range(start="2023-01-01", periods=100, freq="D"),
-    "open": np.random.random(100) + 1,
-    "high": np.random.random(100) + 1.5,
-    "low": np.random.random(100) + 0.5,
-    "close": np.random.random(100) + 1,
-    "volume": np.random.randint(100, 1000, 100),
-})
-data.set_index("datetime", inplace=True)
-
-# Initialize Backtrader
-bt_data = bt.feeds.PandasData(dataname=data)
-
-# Setup Cerebro
-cerebro = bt.Cerebro()
-cerebro.addstrategy(MyStrategy, nCandles=10)  # Use the strategy with 10 candles
-cerebro.adddata(bt_data)
-
-# Run the backtest
-cerebro.run()
-cerebro.plot()
+bt = Backtest(data, BotStrategy, cash=10_000, commission=.002)
+stats = bt.run()
+print(stats)

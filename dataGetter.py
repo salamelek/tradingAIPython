@@ -2,6 +2,39 @@ import pandas as pd
 import numpy as np
 
 
+def load_data(file_paths):
+    """
+    Returns a pd dataframe with the data from the files.
+    """
+
+    data = []
+
+    for file_path in file_paths:
+        df = pd.read_csv(file_path)
+        data.append(df)
+
+    combined_data = pd.concat(data, ignore_index=True)
+
+    return combined_data
+
+
+def getDataBacktester(filePaths):
+    data = load_data(filePaths)
+
+    data['open_time'] = pd.to_datetime(data['open_time'], unit='ms')
+    data.set_index('open_time', inplace=True)
+    data = data.sort_index()
+    data = data.rename(columns={
+        'open': 'Open',
+        'high': 'High',
+        'low': 'Low',
+        'close': 'Close',
+        'volume': 'Volume'
+    })[['Open', 'High', 'Low', 'Close', 'Volume']]
+
+    return data
+
+
 def load_and_normalize_csv(file_paths):
     """
     Load and normalize OHLCV data from multiple CSV files.
