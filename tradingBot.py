@@ -136,8 +136,8 @@ class TradingBot:
 
         posTot = 0
         for candleIndex in candleIndexes:
-            longRes = simulatePosition(self.trainCandles, candleIndex + 1, 1, self.posMaxLen)
-            shortRes = simulatePosition(self.trainCandles, candleIndex + 1, -1, self.posMaxLen)
+            longRes = simulatePosition(self.trainCandles, candleIndex + 1, 1, self.tp, self.sl, self.posMaxLen)
+            shortRes = simulatePosition(self.trainCandles, candleIndex + 1, -1, self.tp, self.sl, self.posMaxLen)
 
             if longRes == shortRes:
                 return 0
