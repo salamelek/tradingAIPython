@@ -6,6 +6,11 @@ from tradingBot import *
 bot = TradingBot(
     "./marketData/XRPUSDT-5m-2020-23",
     "300-100-50-5_4.33e-6",
+    sl=0.01,
+    tp=0.02,
+    minDistThreshold=1e-05,
+    k=3,
+    posMaxLen=50
 )
 
 candles = getDataBacktester("./marketData/XRPUSDT-5m-2024")
@@ -13,7 +18,7 @@ candles = getDataBacktester("./marketData/XRPUSDT-5m-2024")
 print("Backtesting...")
 wins = 0
 losses = 0
-for i in range(10000):
+for i in range(48000):
     predictedPos, reason = bot.predict(candles[:100 + i])
 
     if predictedPos == 0:
@@ -26,4 +31,4 @@ for i in range(10000):
     else:
         losses += 1
 
-    print(f"\r[{i}] Wins: {wins}, Losses: {losses}, Ratio: {(wins / losses):.2f}", end="")
+    print(f"\r[{i}] Wins: {wins}, Losses: {losses}, Ratio: {('NaN' if losses == 0 else round(wins / losses, 2))}", end="")

@@ -13,6 +13,9 @@ def simulatePosition(candles: pd.DataFrame, entryIndex: int, side: int, tp, sl, 
     slPrice = entryPrice - entryPrice * sl * side
 
     for i in range(entryIndex, candlesLen):
+        if 0 < posMaxLen < i - entryIndex:
+            return 0
+
         if side == 1 and candles["Low"].iloc[i] <= slPrice:
             return -1
 

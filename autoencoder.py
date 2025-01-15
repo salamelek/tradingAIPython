@@ -25,11 +25,11 @@ class Autoencoder(nn.Module):
 
         # Decoder
         self.decoder = nn.Sequential(
-            nn.Linear(bottleneckSize, 128),
+            nn.Linear(bottleneckSize, 50),
             nn.Tanh(),
-            nn.Linear(128, 256),
+            nn.Linear(50, 100),
             nn.Tanh(),
-            nn.Linear(256, inputSize),
+            nn.Linear(100, inputSize),
             nn.Tanh()
         )
 
@@ -50,7 +50,7 @@ class Autoencoder(nn.Module):
             return self.encoder(x)
 
 
-def trainAutoencoder(model, train_data, val_data, epochs, batchSize, lr, device='cpu'):
+def trainAutoencoder(model, train_data, val_data, epochs=100, batchSize=100, lr=0.001, device='cpu'):
     """
     Train the autoencoder with validation data.
     :param model: Autoencoder model
@@ -108,5 +108,5 @@ def trainAutoencoder(model, train_data, val_data, epochs, batchSize, lr, device=
         avg_val_loss = total_val_loss / len(val_loader)
         print(f"Train Loss: {avg_train_loss:.5e}, Validation Loss: {avg_val_loss:.5e}\n")
 
-    torch.save(model.state_dict(), "autoencoder100-20")
-    print("Model saved as autoencoder100-20")
+    torch.save(model.state_dict(), "autoencoder.tmp")
+    print("Model saved as autoencoder.tmp")

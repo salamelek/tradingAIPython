@@ -13,7 +13,7 @@ if torch.cuda.is_available():
 
 # noinspection PyArgumentList
 class TradingBot:
-    def __init__(self, trainDataFolder, autoencoderFile, minDistThreshold=1e-05, minIndexDistance=10, candleWindowLen=100, sl=0.01, tp=0.02, normCandlesFeatureNum=3, dimNum=5, k=3, posMaxLen=100):
+    def __init__(self, trainDataFolder, autoencoderFile, minDistThreshold=5e-06, minIndexDistance=10, candleWindowLen=100, sl=0.01, tp=0.02, normCandlesFeatureNum=3, dimNum=5, k=3, posMaxLen=100):
         self.normCandlesFeatureNum = normCandlesFeatureNum
         self.minDistThreshold = minDistThreshold
         self.minIndexDistance = minIndexDistance
@@ -150,4 +150,4 @@ class TradingBot:
             if abs(posTot) != i+1:
                 return 0, "Disagreement"
 
-        return int(posTot / self.k), f"{posTot} / {self.k}"
+        return int(posTot / self.k), ""
