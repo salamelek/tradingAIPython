@@ -1,11 +1,39 @@
 import pandas as pd
 import numpy as np
+import torch
+from pathlib import Path
 
 
-def load_data(file_paths):
+def convertCandles(candles: pd.DataFrame) -> torch.Tensor:
+    """
+    Converts a dataFrame of candles to a normalised tensor
+    The returned tensor is 1D
+    """
+
+    if not {"open", "high", "low", "close", "volume"}.issubset(candles.columns):
+        raise ValueError(f"Missing required columns in given candles dataframe")
+
+    # normalise
+    candles.loc[:, "hNorm"] = np.tanh(candles["high"] / candles["open"] - 1)
+    candles.loc[:, "lNorm"] = np.tanh(candles["low"] / candles["open"] - 1)
+    candles.loc[:, "cNorm"] = np.tanh(candles["close"] / candles["open"] - 1)
+    # candles["vNorm"] = np.log(candles["volume"] + 1)
+
+    # normalised arr
+    normalizedCandles = candles[["hNorm", "lNorm", "cNorm"]]
+
+    # Flatten the DataFrame row-wise and convert to a 1D tensor
+    flattenedTensor = torch.from_numpy(normalizedCandles.values.flatten()).float()
+
+    return flattenedTensor
+
+
+def load_data(folderName):
     """
     Returns a pd dataframe with the data from the files.
     """
+
+    file_paths = list(Path(folderName).glob("*.csv"))
 
     data = []
 
@@ -18,8 +46,12 @@ def load_data(file_paths):
     return combined_data
 
 
-def getDataBacktester(filePaths):
-    data = load_data(filePaths)
+def getDataBacktester(folderName):
+    """
+    Loads the data such that the backtesting.py library can read it
+    """
+
+    data = load_data(folderName)
 
     data['open_time'] = pd.to_datetime(data['open_time'], unit='ms')
     data.set_index('open_time', inplace=True)
@@ -35,7 +67,7 @@ def getDataBacktester(filePaths):
     return data
 
 
-def load_and_normalize_csv(file_paths):
+def load_and_normalize_csv(folderName):
     """
     Load and normalize OHLCV data from multiple CSV files.
     (Volume not included anymore)
@@ -46,6 +78,7 @@ def load_and_normalize_csv(file_paths):
     c -> c/o - 1
     v -> log(v + 1)
     """
+    file_paths = list(Path(folderName).glob("*.csv"))
     normalized_data = []
 
     for file_path in file_paths:
@@ -57,10 +90,10 @@ def load_and_normalize_csv(file_paths):
             raise ValueError(f"Missing required columns in {file_path}")
 
         # Apply normalization
-        df["h_norm"] = np.tanh(df["high"] / df["open"] - 1)
-        df["l_norm"] = np.tanh(df["low"] / df["open"] - 1)
-        df["c_norm"] = np.tanh(df["close"] / df["open"] - 1)
-        # df["v_norm"] = np.log(df["volume"] + 1)
+        df.loc[:, "h_norm"] = np.tanh(df["high"] / df["open"] - 1)
+        df.loc[:, "l_norm"] = np.tanh(df["low"] / df["open"] - 1)
+        df.loc[:, "c_norm"] = np.tanh(df["close"] / df["open"] - 1)
+        # df.loc[:, "v_norm"] = np.log(df["volume"] + 1)
 
         # Select normalized columns
         # normalized_data.append(df[["h_norm", "l_norm", "c_norm", "v_norm"]])
@@ -69,12 +102,10 @@ def load_and_normalize_csv(file_paths):
     # Combine all normalized data
     combined_data = pd.concat(normalized_data, ignore_index=True)
 
-    print(combined_data)
-
     return combined_data
 
 
-def getShapedData(filePaths, candlesNum):
+def getShapedData(folderName, candlesNum):
     """
     Reshapes the data from the files into a sliding window of candlesNum candles.
     Returns it as a 2D numpy array.
@@ -85,7 +116,7 @@ def getShapedData(filePaths, candlesNum):
         ...,
     ]
     """
-    data = load_and_normalize_csv(filePaths)
+    data = load_and_normalize_csv(folderName)
     data = data.to_numpy()
 
     nSamples = data.shape[0] - candlesNum + 1

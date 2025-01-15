@@ -15,7 +15,6 @@ class Autoencoder(nn.Module):
 
         # Encoder
         self.encoder = nn.Sequential(
-            # TODO maybe better shape?
             nn.Linear(inputSize, 100),
             nn.Tanh(),
             nn.Linear(100, 50),
@@ -39,14 +38,15 @@ class Autoencoder(nn.Module):
         decoded = self.decoder(encoded)
         return encoded, decoded
 
-    def predict(self, x: torch.Tensor) -> torch.Tensor:
+    def encode(self, x: torch.Tensor) -> torch.Tensor:
         """
         Returns the encoded data for the input tensor.
 
         :param x: Input tensor of shape (batch_size, inputSize)
         :return: Encoded representations as a tensor of shape (batch_size, bottleneckSize)
         """
-        with torch.no_grad():  # Disable gradient calculations for inference
+
+        with torch.no_grad():
             return self.encoder(x)
 
 

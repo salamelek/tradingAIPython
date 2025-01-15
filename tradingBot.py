@@ -1,22 +1,131 @@
-from pathlib import Path
+import faiss
+import bisect
+
 from dataGetter import *
 from autoencoder import *
 
 
+device = "cpu"
+if torch.cuda.is_available():
+    device = "cuda"
+
+
+# noinspection PyArgumentList
 class TradingBot:
-    def __init__(self, trainDataFolder, candleWindowLen=100, sl=0.01, tp=0.02, normCandlesFeatureNum=3, dimNum=5):
+    def __init__(self, trainDataFolder, autoencoderFile, minDistThreshold=1e-06, minIndexDistance=10, candleWindowLen=100, sl=0.01, tp=0.02, normCandlesFeatureNum=3, dimNum=5, k=5):
         self.normCandlesFeatureNum = normCandlesFeatureNum
+        self.minDistThreshold = minDistThreshold
+        self.minIndexDistance = minIndexDistance
         self.candleWindowLen = candleWindowLen
         self.dimNum = dimNum
         self.sl = sl
         self.tp = tp
+        self.k = k
 
-        csvFiles = list(Path(trainDataFolder).glob("*.csv"))
-        trainData = getShapedData(csvFiles, candleWindowLen)
+        # load historical kline data
+        self.trainCandles = getDataBacktester(trainDataFolder)
+
+        # load autoencoder
+        trainData = getShapedData(trainDataFolder, candleWindowLen)
         self.autoencoder = Autoencoder(inputSize=trainData.shape[1], bottleneckSize=dimNum)
+        self.autoencoder.load_state_dict(torch.load(autoencoderFile, weights_only=True, map_location=torch.device('cpu')))
+        self.autoencoder.eval()
 
-    def predictCandles(self, candles):
-        pass
+        # autoencoder pass
+        trainTensor = torch.from_numpy(trainData).float().to(device)
+        compressedTrain = self.autoencoder.encode(trainTensor)
+        compressedNumpy = compressedTrain.cpu().numpy()
 
-    def predictNormCandles(self, normCandles):
-        pass
+        # FAISS knn
+        self.knnIndex = faiss.IndexFlatL2(dimNum)
+        self.knnIndex.add(compressedNumpy)
+
+    def getKnn(self, normCandles: torch.Tensor, k=None) -> tuple:
+        """
+        normCandles must be normalised and encoded
+        """
+        compressedQueryNumpy = normCandles.cpu().numpy()  # Convert to NumPy
+
+        if k is None:
+            k = self.k
+
+        return self.knnIndex.search(compressedQueryNumpy, k)
+
+    def getDifferentKnn(self, normCandles: torch.Tensor) -> tuple:
+        """
+        Returns the k nearest neighbors of the given tensor, ensuring the indices are
+        at least self.minIndexDistance apart.
+
+        :param normCandles: Normalized encoded input tensor
+        :return: A tuple (selected_distances, selected_indices), where:
+                 - selected_distances: List of distances for the selected neighbors.
+                 - selected_indices: List of indices for the selected neighbors.
+        """
+        selected_distances = []
+        selected_indices = []
+        seen_indices = []
+        mult = 1
+        max_mult = 10
+
+        while len(selected_indices) < self.k:
+            if mult > max_mult:
+                print(
+                    f"Unable to find {self.k} distinct neighbors with the given constraints. "
+                    f"Consider relaxing minIndexDistance or increasing the dataset size."
+                )
+                return [], []
+
+            # Request more candidates with an expanded pool
+            distances, indexes = self.getKnn(normCandles, self.k * 5 * mult)
+
+            for d, i in zip(distances[0], indexes[0]):
+                # Use binary search for efficient index checking
+                pos = bisect.bisect_left(seen_indices, i)
+                if (pos == 0 or i - seen_indices[pos - 1] >= self.minIndexDistance) and \
+                        (pos == len(seen_indices) or seen_indices[pos] - i >= self.minIndexDistance):
+                    selected_distances.append(d)
+                    selected_indices.append(i)
+                    bisect.insort(seen_indices, i)
+
+                    # Break early if we've collected enough neighbors
+                    if len(selected_indices) >= self.k:
+                        return selected_distances, selected_indices
+
+            # Increase the candidate pool size
+            mult += 1
+
+        return selected_distances, selected_indices
+
+    def predict(self, candles: pd.DataFrame) -> int:
+        candlesLen = len(candles)
+
+        if candlesLen < self.candleWindowLen:
+            print("Too few candles to make a prediction!")
+            return 0
+
+        # normalise candles and convert them to a tensor
+        candles = candles.iloc[-self.candleWindowLen:].copy()
+        candleTensor = convertCandles(candles)
+        # Reshape to (1, 300)
+        candleTensor = candleTensor.view(1, -1)
+
+        # encode
+        encoded = self.autoencoder.encode(candleTensor)
+
+        # get knn
+        distances, indexes = self.getDifferentKnn(encoded)
+
+        if len(indexes) < self.k:
+            return 0
+
+        # no good enough neighbours
+        if distances[-1] > self.minDistThreshold:
+            return 0
+
+        print(distances)
+        print(indexes)
+
+        # simulate nns
+        # return answer
+
+        return 0
