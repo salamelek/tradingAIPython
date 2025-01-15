@@ -1,8 +1,6 @@
 import faiss
 import bisect
 
-from numpy.f2py.crackfortran import entrypattern
-
 from dataGetter import *
 from autoencoder import *
 from positionSim import *
@@ -15,7 +13,7 @@ if torch.cuda.is_available():
 
 # noinspection PyArgumentList
 class TradingBot:
-    def __init__(self, trainDataFolder, autoencoderFile, minDistThreshold=1e-06, minIndexDistance=10, candleWindowLen=100, sl=0.01, tp=0.02, normCandlesFeatureNum=3, dimNum=5, k=5, posMaxLen=100):
+    def __init__(self, trainDataFolder, autoencoderFile, minDistThreshold=1e-05, minIndexDistance=10, candleWindowLen=100, sl=0.01, tp=0.02, normCandlesFeatureNum=3, dimNum=5, k=3, posMaxLen=100):
         self.normCandlesFeatureNum = normCandlesFeatureNum
         self.minDistThreshold = minDistThreshold
         self.minIndexDistance = minIndexDistance
@@ -100,12 +98,16 @@ class TradingBot:
 
         return selected_distances, selected_indices
 
-    def predict(self, candles: pd.DataFrame) -> int:
+    def predict(self, candles: pd.DataFrame) -> (int, str):
+        """
+        Given a list of candles, returns the predicted market direction
+        Also returns a string "Reason" That explains why the return was 0
+        """
+
         candlesLen = len(candles)
 
         if candlesLen < self.candleWindowLen:
-            print("Too few candles to make a prediction!")
-            return 0
+            return 0, "Too few candles to make a prediction."
 
         # normalise candles and convert them to a tensor
         candles = candles.iloc[-self.candleWindowLen:].copy()
@@ -120,11 +122,11 @@ class TradingBot:
         distances, indexes = self.getDifferentKnn(encoded)
 
         if len(indexes) < self.k:
-            return 0
+            return 0, "No enough neighbours"
 
         # no good enough neighbours
         if distances[-1] > self.minDistThreshold:
-            return 0
+            return 0, f"No good enough neighbours (worst: {distances[-1]})"
 
         """
         [1.6416595e-07, 3.722046e-07, 4.9566995e-07, 5.3198426e-07, 7.001139e-07]
@@ -135,12 +137,9 @@ class TradingBot:
         candleIndexes = [(knnIndex + self.candleWindowLen - 1) for knnIndex in indexes]
 
         posTot = 0
-        for candleIndex in candleIndexes:
+        for i, candleIndex in enumerate(candleIndexes):
             longRes = simulatePosition(self.trainCandles, candleIndex + 1, 1, self.tp, self.sl, self.posMaxLen)
             shortRes = simulatePosition(self.trainCandles, candleIndex + 1, -1, self.tp, self.sl, self.posMaxLen)
-
-            if longRes == shortRes:
-                return 0
 
             if longRes == 1:
                 posTot += 1
@@ -148,4 +147,7 @@ class TradingBot:
             if shortRes == 1:
                 posTot -= 1
 
-        return posTot // self.k
+            if abs(posTot) != i+1:
+                return 0, "Disagreement"
+
+        return int(posTot / self.k), f"{posTot} / {self.k}"

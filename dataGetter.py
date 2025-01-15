@@ -10,14 +10,14 @@ def convertCandles(candles: pd.DataFrame) -> torch.Tensor:
     The returned tensor is 1D
     """
 
-    if not {"open", "high", "low", "close", "volume"}.issubset(candles.columns):
+    if not {"Open", "High", "Low", "Close", "Volume"}.issubset(candles.columns):
         raise ValueError(f"Missing required columns in given candles dataframe")
 
     # normalise
-    candles.loc[:, "hNorm"] = np.tanh(candles["high"] / candles["open"] - 1)
-    candles.loc[:, "lNorm"] = np.tanh(candles["low"] / candles["open"] - 1)
-    candles.loc[:, "cNorm"] = np.tanh(candles["close"] / candles["open"] - 1)
-    # candles["vNorm"] = np.log(candles["volume"] + 1)
+    candles.loc[:, "hNorm"] = np.tanh(candles["High"] / candles["Open"] - 1)
+    candles.loc[:, "lNorm"] = np.tanh(candles["Low"] / candles["Open"] - 1)
+    candles.loc[:, "cNorm"] = np.tanh(candles["Close"] / candles["Open"] - 1)
+    # candles["vNorm"] = np.log(candles["Volume"] + 1)
 
     # normalised arr
     normalizedCandles = candles[["hNorm", "lNorm", "cNorm"]]
