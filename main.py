@@ -5,7 +5,7 @@ from tradingBot import *
 
 bot = TradingBot(
     "./marketData/XRPUSDT-5m-2020-23",
-    "300-100-50-5_4.33e-6",
+    "300-100-50-5_4.29e-6",
     sl=0.01,
     tp=0.02,
     minDistThreshold=1e-05,
