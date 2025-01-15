@@ -1,8 +1,11 @@
 import faiss
 import bisect
 
+from numpy.f2py.crackfortran import entrypattern
+
 from dataGetter import *
 from autoencoder import *
+from positionSim import *
 
 
 device = "cpu"
@@ -12,11 +15,12 @@ if torch.cuda.is_available():
 
 # noinspection PyArgumentList
 class TradingBot:
-    def __init__(self, trainDataFolder, autoencoderFile, minDistThreshold=1e-06, minIndexDistance=10, candleWindowLen=100, sl=0.01, tp=0.02, normCandlesFeatureNum=3, dimNum=5, k=5):
+    def __init__(self, trainDataFolder, autoencoderFile, minDistThreshold=1e-06, minIndexDistance=10, candleWindowLen=100, sl=0.01, tp=0.02, normCandlesFeatureNum=3, dimNum=5, k=5, posMaxLen=100):
         self.normCandlesFeatureNum = normCandlesFeatureNum
         self.minDistThreshold = minDistThreshold
         self.minIndexDistance = minIndexDistance
         self.candleWindowLen = candleWindowLen
+        self.posMaxLen = posMaxLen
         self.dimNum = dimNum
         self.sl = sl
         self.tp = tp
@@ -122,10 +126,26 @@ class TradingBot:
         if distances[-1] > self.minDistThreshold:
             return 0
 
-        print(distances)
-        print(indexes)
+        """
+        [1.6416595e-07, 3.722046e-07, 4.9566995e-07, 5.3198426e-07, 7.001139e-07]
+        [177451, 383051, 112201, 222643, 95730]
+        """
 
         # simulate nns
-        # return answer
+        candleIndexes = [(knnIndex + self.candleWindowLen - 1) for knnIndex in indexes]
 
-        return 0
+        posTot = 0
+        for candleIndex in candleIndexes:
+            longRes = simulatePosition(self.trainCandles, candleIndex + 1, 1, self.posMaxLen)
+            shortRes = simulatePosition(self.trainCandles, candleIndex + 1, -1, self.posMaxLen)
+
+            if longRes == shortRes:
+                return 0
+
+            if longRes == 1:
+                posTot += 1
+
+            if shortRes == 1:
+                posTot -= 1
+
+        return posTot // self.k
