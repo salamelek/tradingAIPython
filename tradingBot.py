@@ -51,7 +51,9 @@ class TradingBot:
         if k is None:
             k = self.k
 
-        return self.knnIndex.search(compressedQueryNumpy, k)
+        dist, indx = self.knnIndex.search(compressedQueryNumpy, k)
+
+        return dist[0], indx[0]
 
     def getDifferentKnn(self, normCandles: torch.Tensor) -> tuple:
         """
@@ -80,7 +82,7 @@ class TradingBot:
             # Request more candidates with an expanded pool
             distances, indexes = self.getKnn(normCandles, self.k * 5 * mult)
 
-            for d, i in zip(distances[0], indexes[0]):
+            for d, i in zip(distances, indexes):
                 # Use binary search for efficient index checking
                 pos = bisect.bisect_left(seen_indices, i)
                 if (pos == 0 or i - seen_indices[pos - 1] >= self.minIndexDistance) and \
@@ -120,6 +122,12 @@ class TradingBot:
 
         # get knn
         distances, indexes = self.getDifferentKnn(encoded)
+        # distances, indexes = self.getKnn(encoded)
+        """
+        Using the same parameters, with differentKnn we have a pf of 1.23, while
+        using getKnn gets only 1.16. This is probably because when we get
+        distinct neighbours, we get different examples
+        """
 
         if len(indexes) < self.k:
             return 0, "No enough neighbours"
