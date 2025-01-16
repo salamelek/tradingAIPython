@@ -38,6 +38,6 @@ I need more data:
         XRP: [ 9.2949e-03, -4.0895e-03, -1.7379e-01,  ..., -2.5334e-02, -4.5922e-03, -3.5404e-02]
         ETH: [ 5.1194e-03, -2.1501e-03, -1.5941e-01,  ..., -2.6484e-02, 5.2337e-03, -3.2262e-02]
 
-        tbh they seem similar as well..
+        tbh they seem similar as well...
 
-    Well now this means that i can probably use other pairs in the knn search without problem :)
+    Well now this means that I can probably use other pairs in the knn search without problem :)

@@ -2,8 +2,8 @@ from tradingBot import *
 
 
 bot = TradingBot(
-    "./marketData/XRPUSDT-5m-2020-23",
-    "300-100-50-10_5.73e-6",
+    ["./marketData/XRPUSDT-5m-2020-23", "./marketData/ETHUSDT-5m-2020-24"],
+    "eth+xrp_300-100-50-10_5.74e-6",
     sl=0.01,
     tp=0.022,
     minDistThreshold=1,  # e-05,
@@ -25,6 +25,7 @@ for i in range(48000):
     if predictedPos == 0:
         continue
 
+    print("Simulating ")
     win = simulatePosition(candles, 100+i, predictedPos, tp, sl)
 
     if win == 1:

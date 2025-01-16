@@ -13,7 +13,11 @@ if torch.cuda.is_available():
 
 # noinspection PyArgumentList
 class TradingBot:
-    def __init__(self, trainDataFolder, autoencoderFile, minDistThreshold=5e-06, minIndexDistance=10, candleWindowLen=100, sl=0.01, tp=0.02, normCandlesFeatureNum=3, dimNum=5, k=3, posMaxLen=100):
+    def __init__(self, trainDataFolders: list, autoencoderFile: str, minDistThreshold=5e-06, minIndexDistance=10, candleWindowLen=100, sl=0.01, tp=0.02, normCandlesFeatureNum=3, dimNum=5, k=3, posMaxLen=100):
+        """
+        trainDataFolders: list folder names
+        """
+
         self.normCandlesFeatureNum = normCandlesFeatureNum
         self.minDistThreshold = minDistThreshold
         self.minIndexDistance = minIndexDistance
@@ -25,22 +29,31 @@ class TradingBot:
         self.k = k
 
         # load historical kline data
-        self.trainCandles = getDataBacktester(trainDataFolder)
+        self.trainCandlesList = []
+        self.trainCandlesNumList = []
+        self.normCandles = []
+        for trainDataFolder in trainDataFolders:
+            candles = getDataBacktester(trainDataFolder)
+            self.trainCandlesList.append(candles)
+            self.trainCandlesNumList.append(len(candles))
+            self.normCandles.append(getShapedData(trainDataFolder, self.candleWindowLen))
 
         # load autoencoder
-        trainData = getShapedData(trainDataFolder, candleWindowLen)
-        self.autoencoder = Autoencoder(inputSize=trainData.shape[1], bottleneckSize=dimNum)
+        self.autoencoder = Autoencoder(self.candleWindowLen * self.normCandlesFeatureNum, bottleneckSize=dimNum)
         self.autoencoder.load_state_dict(torch.load(autoencoderFile, weights_only=True, map_location=torch.device('cpu')))
         self.autoencoder.eval()
 
         # autoencoder pass
-        trainTensor = torch.from_numpy(trainData).float().to(device)
-        compressedTrain = self.autoencoder.encode(trainTensor)
-        compressedNumpy = compressedTrain.cpu().numpy()
+        encodedCandles = []
+        for normCandle in self.normCandles:
+            trainTensor = torch.from_numpy(normCandle).float().to(device)
+            compressedTrain = self.autoencoder.encode(trainTensor)
+            encodedCandles.append(compressedTrain.cpu().numpy())
 
         # FAISS knn
         self.knnIndex = faiss.IndexFlatL2(dimNum)
-        self.knnIndex.add(compressedNumpy)
+        for encodedCandle in encodedCandles:
+            self.knnIndex.add(encodedCandle)
 
     def getKnn(self, normCandles: torch.Tensor, k=None) -> tuple:
         """
@@ -146,8 +159,23 @@ class TradingBot:
 
         posTot = 0
         for i, candleIndex in enumerate(candleIndexes):
-            longRes = simulatePosition(self.trainCandles, candleIndex + 1, 1, self.tp, self.sl, self.posMaxLen)
-            shortRes = simulatePosition(self.trainCandles, candleIndex + 1, -1, self.tp, self.sl, self.posMaxLen)
+            # select the correct candles
+            trainCandlesIndex = 0
+            lenSum = 0
+            for j in range(len(self.trainCandlesNumList)):
+                currLen = self.trainCandlesNumList[j]
+
+                if candleIndex >= currLen:
+                    lenSum += currLen
+                    continue
+
+                trainCandlesIndex = j
+                candleIndex -= lenSum
+                print(f"Using list on index {trainCandlesIndex}")
+                break
+
+            longRes = simulatePosition(self.trainCandlesList[trainCandlesIndex], candleIndex + 1, 1, self.tp, self.sl, self.posMaxLen)
+            shortRes = simulatePosition(self.trainCandlesList[trainCandlesIndex], candleIndex + 1, -1, self.tp, self.sl, self.posMaxLen)
 
             if longRes == 1:
                 posTot += 1

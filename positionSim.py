@@ -6,6 +6,9 @@ def simulatePosition(candles: pd.DataFrame, entryIndex: int, side: int, tp, sl, 
     Returns 1 if the position wins, -1 if loses, 0 if can't decide
     """
 
+    print(f"Simulating position on index {entryIndex}:")
+    print(candles)
+
     candlesLen = len(candles)
 
     entryPrice = candles["Open"].iloc[entryIndex]
