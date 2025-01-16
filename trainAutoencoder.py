@@ -4,7 +4,7 @@ from autoencoder import *
 
 candlesNum = 100
 inputSize = candlesNum * 3
-bottleneck = 5
+bottleneck = 10
 
 ae = Autoencoder(inputSize, bottleneck)
 
