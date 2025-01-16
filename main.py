@@ -3,12 +3,13 @@ from tradingBot import *
 
 bot = TradingBot(
     "./marketData/XRPUSDT-5m-2020-23",
-    "300-100-50-5_4.29e-6",
+    "300-100-50-10_5.73e-6",
     sl=0.01,
     tp=0.022,
     minDistThreshold=1,  # e-05,
     k=3,
-    posMaxLen=24
+    posMaxLen=24,
+    dimNum=10
 )
 
 candles = getDataBacktester("./marketData/XRPUSDT-5m-2024")

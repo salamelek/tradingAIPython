@@ -21,3 +21,23 @@ I need more data:
         When using the same normalization, it is clear that ETH is much more
         stable than XRP. This means that the abs value of the numbers in the
         vector are much lower.
+
+        Actual results:
+            eth+xrp:  [47689] Wins: 39, Losses: 53, Profit factor: 1.47
+            xrp only: [47589] Wins: 22, Losses: 51, Profit factor: 0.86
+
+        So it seems that the autoencoder with more pairs encodes trends better.
+
+    Now let's take a look at the knn dataPoints:
+        XRP: [-0.2017,  0.1775, -0.0058,  ...,  0.0023, -0.0592, -0.0839]
+        ETH: [-0.1996,  0.1827,  0.0055,  ..., -0.0069, -0.0475, -0.0795]
+
+        They seem surprisingly similar...
+
+    Now let's take a look with the autoencoder trained only on xrp:
+        XRP: [ 9.2949e-03, -4.0895e-03, -1.7379e-01,  ..., -2.5334e-02, -4.5922e-03, -3.5404e-02]
+        ETH: [ 5.1194e-03, -2.1501e-03, -1.5941e-01,  ..., -2.6484e-02, 5.2337e-03, -3.2262e-02]
+
+        tbh they seem similar as well..
+
+    Well now this means that i can probably use other pairs in the knn search without problem :)
