@@ -15,3 +15,9 @@ I need more data:
 
     This would mean that each dataPoint has to store not only the index,
     but also the pair? Or i can just remember te range of indexes for each pair
+
+    1st testing:
+        I added ETH data in the mix. At a first glance, this will be useless.
+        When using the same normalization, it is clear that ETH is much more
+        stable than XRP. This means that the abs value of the numbers in the
+        vector are much lower.
