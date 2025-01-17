@@ -47,9 +47,9 @@ I need more data:
         The profit factor is higher, but interestingly, the number of trades is lower.
         Maybe it's a result of having more negative confirmation? idk.
 
-        20K candles test:
+        20K candles test (10 dims):
             only xrp:  [19122] Wins: 13, Losses: 20, Profit factor: 1.3
             xrp + eth: [17843] Wins: 9, Losses: 11, Profit factor: 1.64
-        100K candles test:
+        100K candles test (10 dims):
             only xrp:  [99917] Wins: 65, Losses: 117, Profit factor: 1.11
             xrp + eth: [99903] Wins: 35, Losses: 63, Profit factor: 1.11
