@@ -2,13 +2,13 @@ from tradingBot import *
 
 
 bot = TradingBot(
-    ["./marketData/XRPUSDT-5m-2020-23", "./marketData/ETHUSDT-5m-2020-24"],
+    ["./marketData/XRPUSDT-5m-2020-23"], # , "./marketData/ETHUSDT-5m-2020-24"],
     "eth+xrp_300-100-50-10_5.74e-6",
     sl=0.01,
     tp=0.022,
     minDistThreshold=1,  # e-05,
     k=3,
-    posMaxLen=24,
+    posMaxLen=48,
     dimNum=10
 )
 
@@ -19,13 +19,12 @@ tp = 0.02
 sl = 0.01
 wins = 0
 losses = 0
-for i in range(48000):
+for i in range(100000):
     predictedPos, reason = bot.predict(candles[:100 + i])
 
     if predictedPos == 0:
         continue
 
-    print("Simulating ")
     win = simulatePosition(candles, 100+i, predictedPos, tp, sl)
 
     if win == 1:

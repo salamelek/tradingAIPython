@@ -157,21 +157,22 @@ class TradingBot:
         # simulate nns
         candleIndexes = [(knnIndex + self.candleWindowLen - 1) for knnIndex in indexes]
 
+        trainCandlesNumListLen = len(self.trainCandlesNumList)
+
         posTot = 0
         for i, candleIndex in enumerate(candleIndexes):
             # select the correct candles
             trainCandlesIndex = 0
             lenSum = 0
-            for j in range(len(self.trainCandlesNumList)):
+            for j in range(trainCandlesNumListLen):
                 currLen = self.trainCandlesNumList[j]
 
-                if candleIndex >= currLen:
+                if candleIndex >= currLen and j < trainCandlesNumListLen - 1:
                     lenSum += currLen
                     continue
 
                 trainCandlesIndex = j
                 candleIndex -= lenSum
-                print(f"Using list on index {trainCandlesIndex}")
                 break
 
             longRes = simulatePosition(self.trainCandlesList[trainCandlesIndex], candleIndex + 1, 1, self.tp, self.sl, self.posMaxLen)
