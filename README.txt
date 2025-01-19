@@ -47,15 +47,22 @@ I need more data:
         The profit factor is higher, but interestingly, the number of trades is lower.
         Maybe it's a result of having more negative confirmation? idk.
 
-        100K candles test (5 dims, posMaxLen=48):
+        100K candles, 5 dims, posMaxLen=48:
             only xrp:  [99968] Wins: 244, Losses: 440, Profit factor: 1.11
             xrp + eth: [99763] Wins: 158, Losses: 322, Profit factor: 0.98
-        100K candles test (10 dims, posMaxLen=24):
-            only xrp:  [99917] Wins: 65, Losses: 117, Profit factor: 1.11
-            xrp + eth: [99903] Wins: 35, Losses: 63, Profit factor: 1.11
-        100K candles test (10 dims, posMaxLen=48):
+        100K candles, 10 dims, posMaxLen=48:
             only xrp:  [99982] Wins: 252, Losses: 411, Profit factor: 1.23
-            xrp + eth:
-        100K candles test (20 dims, posMaxLen=48):
+            xrp + eth: [99903] Wins: 186, Losses: 318, Profit factor: 1.17
+        100K candles, 20 dims, posMaxLen=48:
             only xrp:  [99958] Wins: 242, Losses: 436, Profit factor: 1.11
             xrp + eth: [99627] Wins: 184, Losses: 310, Profit factor: 1.19
+
+        100K candles, 5 dims, posMaxLen=24:
+            only xrp:  [99968] Wins: 73, Losses: 128, Profit factor: 1.14
+            xrp + eth: [95180] Wins: 34, Losses: 68, Profit factor: 1.0
+        100K candles, 10 dims, posMaxLen=24:
+            only xrp:  [99917] Wins: 65, Losses: 117, Profit factor: 1.11
+            xrp + eth: [99903] Wins: 35, Losses: 63, Profit factor: 1.11
+        100K candles, 20 dims, posMaxLen=24:
+            only xrp:  [98959] Wins: 61, Losses: 116, Profit factor: 1.05
+            xrp + eth: [99554] Wins: 41, Losses: 64, Profit factor: 1.28
