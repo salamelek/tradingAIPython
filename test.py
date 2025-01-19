@@ -3,7 +3,7 @@ from dataGetter import *
 
 
 autoencoder = Autoencoder(inputSize=300, bottleneckSize=10)
-autoencoder.load_state_dict(torch.load("eth+xrp_300-100-50-10_5.74e-6", weights_only=True, map_location=torch.device('cpu')))
+autoencoder.load_state_dict(torch.load("eth+xrp_300-100-50-10", weights_only=True, map_location=torch.device('cpu')))
 autoencoder.eval()
 
 

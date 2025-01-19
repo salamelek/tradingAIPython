@@ -66,3 +66,8 @@ I need more data:
         100K candles, 20 dims, posMaxLen=24:
             only xrp:  [98959] Wins: 61, Losses: 116, Profit factor: 1.05
             xrp + eth: [99554] Wins: 41, Losses: 64, Profit factor: 1.28
+
+    Now, what do these tests mean?
+        ... no idea :(
+        Lets ask chatGPT :>
+        ChatGPT confirms what I thought... I should add more data and see what happens
