@@ -51,9 +51,17 @@ class TradingBot:
             encodedCandles.append(compressedTrain.cpu().numpy())
 
         # FAISS knn
+        """
+        # with autoencoder
         self.knnIndex = faiss.IndexFlatL2(dimNum)
         for encodedCandle in encodedCandles:
             self.knnIndex.add(encodedCandle)
+        """
+
+        # without autoencoder
+        self.knnIndex = faiss.IndexFlatL2(300)
+        for normCandle in self.normCandles:
+            self.knnIndex.add(np.asarray(normCandle, dtype=np.float32))
 
     def getKnn(self, normCandles: torch.Tensor, k=None) -> tuple:
         """
@@ -134,8 +142,8 @@ class TradingBot:
         encoded = self.autoencoder.encode(candleTensor)
 
         # get knn
-        distances, indexes = self.getDifferentKnn(encoded)
-        # distances, indexes = self.getKnn(encoded)
+        # distances, indexes = self.getDifferentKnn(encoded)
+        distances, indexes = self.getDifferentKnn(candleTensor)
         """
         Using the same parameters, with differentKnn we have a pf of 1.23, while
         using getKnn gets only 1.16. This is probably because when we get

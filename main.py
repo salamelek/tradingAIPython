@@ -2,13 +2,13 @@ from tradingBot import *
 
 
 bot = TradingBot(
-    ["./marketData/XRPUSDT-5m-2020-23", "./marketData/ETHUSDT-5m-2020-24"],
-    "eth+xrp_300-100-50-20_5.25e-6",
+    ["./marketData/XRPUSDT-5m-2020-23"],#, "./marketData/ETHUSDT-5m-2020-24"],
+    "eth+xrp_300-100-50-20",
     sl=0.01,
     tp=0.022,
     minDistThreshold=1,  # e-05,
     k=3,
-    posMaxLen=24,
+    posMaxLen=48,
     dimNum=20
 )
 

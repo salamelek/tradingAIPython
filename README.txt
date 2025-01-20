@@ -67,6 +67,10 @@ I need more data:
             only xrp:  [98959] Wins: 61, Losses: 116, Profit factor: 1.05
             xrp + eth: [99554] Wins: 41, Losses: 64, Profit factor: 1.28
 
+    Bonus test:
+        100K candles, 20 dims, posMaxLen=48, no autoencoder:
+            only xrp:  [99713] Wins: 273, Losses: 567, Profit factor: 0.96
+
     Now, what do these tests mean?
         ... no idea :(
         Lets ask chatGPT :>
