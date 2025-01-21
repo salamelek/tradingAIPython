@@ -6,13 +6,14 @@ candlesNum = 100
 inputSize = candlesNum * 3
 bottleneck = 20
 
-ae = Autoencoder(inputSize, bottleneck)
+ae = Autoencoder(inputSize, bottleneck).double()
 
 
-trainData1 = getShapedData("./marketData/XRPUSDT-5m-2020-23", candlesNum)
-trainData2 = getShapedData("./marketData/ETHUSDT-5m-2020-24", candlesNum)
-validData = getShapedData("./marketData/XRPUSDT-5m-2024", candlesNum)
+xrpCandles = getNormCandles("./marketData/XRPUSDT-5m-2020-23").to_numpy()
+ethCandles = getNormCandles("./marketData/ETHUSDT-5m-2020-24").to_numpy()
+btcCandles = getNormCandles("./marketData/BTCUSDT-5m-2020-24").to_numpy()
 
-trainData = np.concatenate([trainData1, trainData2], axis=0)
+trainCandles = np.concatenate([xrpCandles, ethCandles, btcCandles], axis=0)
+validCandles = getNormCandles("./marketData/XRPUSDT-5m-2024").to_numpy()
 
-trainAutoencoder(ae, trainData, validData, epochs=5)
+trainAutoencoder(ae, trainCandles, validCandles, inputSize, epochs=5)

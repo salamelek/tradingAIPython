@@ -37,7 +37,7 @@ class BotStrategy(Strategy):
             self.sell(size=10, sl=sl, tp=tp)
 
 
-data = getDataBacktester(list(Path("marketData/XRPUSDT-5m-2024").glob("*.csv")))
+data = getCandles(list(Path("marketData/XRPUSDT-5m-2024").glob("*.csv")))
 
 bt = Backtest(data, BotStrategy, cash=10_000, commission=.002)
 stats = bt.run()

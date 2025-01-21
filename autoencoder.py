@@ -1,7 +1,8 @@
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data import DataLoader, TensorDataset, Dataset
 
 
 class Autoencoder(nn.Module):
@@ -50,20 +51,39 @@ class Autoencoder(nn.Module):
             return self.encoder(x)
 
 
-def trainAutoencoder(model, train_data, val_data, epochs=100, batchSize=100, lr=0.001, device='cpu'):
+class SlidingWindowDataset(Dataset):
+    def __init__(self, data, window):
+        self.data = data
+        self.window = window
+
+    def __getitem__(self, index):
+        return self.data[index:index+self.window]
+
+    def __len__(self):
+        return len(self.data) - self.window + 1
+
+
+def trainAutoencoder(model: Autoencoder, trainCandles: np.ndarray, validCandles: np.ndarray, featuresNum: int, epochs=100, batchSize=32, lr=0.001, device='cpu') -> None:
     """
     Train the autoencoder with validation data.
+
     :param model: Autoencoder model
-    :param train_data: Training data (normalized)
-    :param val_data: Validation data (normalized)
+    :param trainCandles: Training data (normalized candles)
+    :param validCandles: Validation data (normalized candles)
+    :param featuresNum: Number of candles to use
     :param epochs: Number of training epochs
     :param batchSize: Batch size for training
     :param lr: Learning rate
     :param device: Device ('cpu' or 'cuda')
     """
     # Prepare data
-    train_dataset = TensorDataset(torch.tensor(train_data, dtype=torch.float32))
-    val_dataset = TensorDataset(torch.tensor(val_data, dtype=torch.float32))
+    trainData = torch.from_numpy(trainCandles).reshape(-1)
+    validData = torch.from_numpy(validCandles).reshape(-1)
+
+    # create the datasets
+    train_dataset = SlidingWindowDataset(trainData, featuresNum)
+    val_dataset = SlidingWindowDataset(validData, featuresNum)
+
     train_loader = DataLoader(train_dataset, batch_size=batchSize, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=batchSize, shuffle=False)
 
@@ -83,7 +103,6 @@ def trainAutoencoder(model, train_data, val_data, epochs=100, batchSize=100, lr=
         for i, batch in enumerate(train_loader):
             print(f"\rTraining batch {i + 1} / {len(train_loader)}", end="")
 
-            batch = batch[0].to(device)
             optimizer.zero_grad()
             _, reconstructed = model(batch)
             loss = criterion(reconstructed, batch)

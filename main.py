@@ -12,7 +12,7 @@ bot = TradingBot(
     dimNum=20
 )
 
-candles = getDataBacktester("./marketData/XRPUSDT-5m-2024")
+candles = getCandles("./marketData/XRPUSDT-5m-2024")
 
 print("Backtesting...")
 tp = 0.02

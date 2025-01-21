@@ -33,7 +33,7 @@ class TradingBot:
         self.trainCandlesNumList = []
         self.normCandles = []
         for trainDataFolder in trainDataFolders:
-            candles = getDataBacktester(trainDataFolder)
+            candles = getCandles(trainDataFolder)
             self.trainCandlesList.append(candles)
             self.trainCandlesNumList.append(len(candles))
             self.normCandles.append(getShapedData(trainDataFolder, self.candleWindowLen))
@@ -134,7 +134,7 @@ class TradingBot:
 
         # normalise candles and convert them to a tensor
         candles = candles.iloc[-self.candleWindowLen:].copy()
-        candleTensor = convertCandles(candles)
+        candleTensor = normaliseCandles(candles)
         # Reshape to (1, 300)
         candleTensor = candleTensor.view(1, -1)
 
