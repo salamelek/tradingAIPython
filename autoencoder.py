@@ -52,25 +52,28 @@ class Autoencoder(nn.Module):
 
 
 class SlidingWindowDataset(Dataset):
-    def __init__(self, data, window):
+    def __init__(self, data, window, step):
         self.data = data
         self.window = window
+        self.step = step
 
     def __getitem__(self, index):
+        index *= self.step
         return self.data[index:index+self.window]
 
     def __len__(self):
-        return len(self.data) - self.window + 1
+        return (len(self.data) - self.window) // self.step + 1
 
 
-def trainAutoencoder(model: Autoencoder, trainCandles: np.ndarray, validCandles: np.ndarray, featuresNum: int, epochs=100, batchSize=32, lr=0.001, device='cpu') -> None:
+def trainAutoencoder(model: Autoencoder, trainCandles: np.ndarray, validCandles: np.ndarray, candlesNum: int, candleFeaturesNum: int, epochs=100, batchSize=32, lr=0.001, device='cpu') -> None:
     """
     Train the autoencoder with validation data.
 
     :param model: Autoencoder model
     :param trainCandles: Training data (normalized candles)
     :param validCandles: Validation data (normalized candles)
-    :param featuresNum: Number of candles to use
+    :param candlesNum: Number of candles to use
+    :param candleFeaturesNum: Number of features of each candle
     :param epochs: Number of training epochs
     :param batchSize: Batch size for training
     :param lr: Learning rate
@@ -81,10 +84,11 @@ def trainAutoencoder(model: Autoencoder, trainCandles: np.ndarray, validCandles:
     validData = torch.from_numpy(validCandles).reshape(-1)
 
     # create the datasets
-    train_dataset = SlidingWindowDataset(trainData, featuresNum)
-    val_dataset = SlidingWindowDataset(validData, featuresNum)
+    windowSize = candlesNum * candleFeaturesNum
+    train_dataset = SlidingWindowDataset(trainData, windowSize, candleFeaturesNum)
+    val_dataset = SlidingWindowDataset(validData, windowSize, candleFeaturesNum)
 
-    train_loader = DataLoader(train_dataset, batch_size=batchSize, shuffle=True)
+    train_loader = DataLoader(train_dataset, batch_size=batchSize, shuffle=False)
     val_loader = DataLoader(val_dataset, batch_size=batchSize, shuffle=False)
 
     # Optimizer and loss
@@ -103,6 +107,7 @@ def trainAutoencoder(model: Autoencoder, trainCandles: np.ndarray, validCandles:
         for i, batch in enumerate(train_loader):
             print(f"\rTraining batch {i + 1} / {len(train_loader)}", end="")
 
+            batch = batch.to(device)
             optimizer.zero_grad()
             _, reconstructed = model(batch)
             loss = criterion(reconstructed, batch)

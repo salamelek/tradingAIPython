@@ -2,8 +2,8 @@ from tradingBot import *
 
 
 bot = TradingBot(
-    ["./marketData/XRPUSDT-5m-2020-23", "./marketData/ETHUSDT-5m-2020-24"],
-    "eth+xrp_300-100-50-20",
+    ["./marketData/XRPUSDT-5m-2020-23", "./marketData/ETHUSDT-5m-2020-24", "./marketData/BTCUSDT-5m-2020-24"],
+    "ae_test_2",
     sl=0.01,
     tp=0.022,
     minDistThreshold=1,  # e-05,

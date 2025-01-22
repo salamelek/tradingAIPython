@@ -3,7 +3,7 @@ import pandas as pd
 
 def simulatePosition(candles: pd.DataFrame, entryIndex: int, side: int, tp, sl, posMaxLen=-1):
     """
-    Returns 1 if the position wins, -1 if loses, 0 if can't decide
+    Returns 1 if the position wins, -1 if loses, 0 if it can't decide
     """
 
     candlesLen = len(candles)

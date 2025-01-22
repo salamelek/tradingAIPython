@@ -29,45 +29,48 @@ class TradingBot:
         self.k = k
 
         # load historical kline data
-        self.trainCandlesList = []
-        self.trainCandlesNumList = []
-        self.normCandles = []
+        self.candlesList = []
+        self.normCandlesList = []
         for trainDataFolder in trainDataFolders:
             candles = getCandles(trainDataFolder)
-            self.trainCandlesList.append(candles)
-            self.trainCandlesNumList.append(len(candles))
-            self.normCandles.append(getShapedData(trainDataFolder, self.candleWindowLen))
+            self.candlesList.append(candles)
+            self.normCandlesList.append(normaliseCandles(candles))
 
         # load autoencoder
-        self.autoencoder = Autoencoder(self.candleWindowLen * self.normCandlesFeatureNum, bottleneckSize=dimNum)
+        self.autoencoder = Autoencoder(self.candleWindowLen * self.normCandlesFeatureNum, bottleneckSize=dimNum).double()
         self.autoencoder.load_state_dict(torch.load(autoencoderFile, weights_only=True, map_location=torch.device('cpu')))
         self.autoencoder.eval()
 
         # autoencoder pass
-        encodedCandles = []
-        for normCandle in self.normCandles:
-            trainTensor = torch.from_numpy(normCandle).float().to(device)
-            compressedTrain = self.autoencoder.encode(trainTensor)
-            encodedCandles.append(compressedTrain.cpu().numpy())
+        encodedCandlesList = []
+        for normCandles in self.normCandlesList:
+            normCandlesTensor = torch.from_numpy(normCandles.to_numpy()).reshape(-1).to(device)
+            windows = normCandlesTensor.unfold(0, self.normCandlesFeatureNum * self.candleWindowLen, self.normCandlesFeatureNum)
+            self.autoencoder.eval()
+
+            # we have to use batches because it cant fit all in memory :p
+            batchSize = 100000
+            encodedBatches = []
+            for i in range(0, windows.size(0), batchSize):
+                batch = windows[i:i + batchSize]
+                encoded_batch = self.autoencoder.encode(batch)
+                encodedBatches.append(encoded_batch)
+
+            # Concatenate all the encoded batches
+            encodedCandlesList.append(torch.cat(encodedBatches, dim=0).numpy())
 
         # FAISS knn
         # with autoencoder
         self.knnIndex = faiss.IndexFlatL2(dimNum)
-        for encodedCandle in encodedCandles:
-            self.knnIndex.add(encodedCandle)
-
-        """
-        # without autoencoder
-        self.knnIndex = faiss.IndexFlatL2(300)
-        for normCandle in self.normCandles:
-            self.knnIndex.add(np.asarray(normCandle, dtype=np.float32))
-        """
+        for encodedCandles in encodedCandlesList:
+            # faiss only supports float32 apparently :p
+            self.knnIndex.add(encodedCandles.astype(np.float32))
 
     def getKnn(self, normCandles: torch.Tensor, k=None) -> tuple:
         """
         normCandles must be normalised and encoded
         """
-        compressedQueryNumpy = normCandles.cpu().numpy()  # Convert to NumPy
+        compressedQueryNumpy = normCandles.cpu().numpy().astype(np.float32)  # Convert to NumPy
 
         if k is None:
             k = self.k
@@ -134,21 +137,14 @@ class TradingBot:
 
         # normalise candles and convert them to a tensor
         candles = candles.iloc[-self.candleWindowLen:].copy()
-        candleTensor = normaliseCandles(candles)
-        # Reshape to (1, 300)
-        candleTensor = candleTensor.view(1, -1)
+        normCandles = normaliseCandles(candles).to_numpy()
+        normCandlesTensor = torch.from_numpy(normCandles).reshape(1, -1)
 
         # encode
-        encoded = self.autoencoder.encode(candleTensor)
+        encoded = self.autoencoder.encode(normCandlesTensor)
 
         # get knn
         distances, indexes = self.getDifferentKnn(encoded)
-        # distances, indexes = self.getDifferentKnn(candleTensor)
-        """
-        Using the same parameters, with differentKnn we have a pf of 1.23, while
-        using getKnn gets only 1.16. This is probably because when we get
-        distinct neighbours, we get different examples
-        """
 
         if len(indexes) < self.k:
             return 0, "No enough neighbours"
@@ -165,17 +161,15 @@ class TradingBot:
         # simulate nns
         candleIndexes = [(knnIndex + self.candleWindowLen - 1) for knnIndex in indexes]
 
-        trainCandlesNumListLen = len(self.trainCandlesNumList)
-
         posTot = 0
         for i, candleIndex in enumerate(candleIndexes):
             # select the correct candles
             trainCandlesIndex = 0
             lenSum = 0
-            for j in range(trainCandlesNumListLen):
-                currLen = self.trainCandlesNumList[j]
+            for j in range(len(self.candlesList)):
+                currLen = len(self.candlesList[j])
 
-                if candleIndex >= currLen and j < trainCandlesNumListLen - 1:
+                if candleIndex >= currLen and j < len(self.candlesList) - 1:
                     lenSum += currLen
                     continue
 
@@ -183,8 +177,8 @@ class TradingBot:
                 candleIndex -= lenSum
                 break
 
-            longRes = simulatePosition(self.trainCandlesList[trainCandlesIndex], candleIndex + 1, 1, self.tp, self.sl, self.posMaxLen)
-            shortRes = simulatePosition(self.trainCandlesList[trainCandlesIndex], candleIndex + 1, -1, self.tp, self.sl, self.posMaxLen)
+            longRes = simulatePosition(self.candlesList[trainCandlesIndex], candleIndex + 1, 1, self.tp, self.sl, self.posMaxLen)
+            shortRes = simulatePosition(self.candlesList[trainCandlesIndex], candleIndex + 1, -1, self.tp, self.sl, self.posMaxLen)
 
             if longRes == 1:
                 posTot += 1
