@@ -75,3 +75,80 @@ I need more data:
         ... no idea :(
         Lets ask chatGPT :>
         ChatGPT confirms what I thought... I should add more data and see what happens
+
+    Added even more data (btc):
+        Memory usage skyrocketed, so I had to make some changes on the data.
+        Now, instead of pre-making the data with a sliding window, the idea is
+        that we say to torch to use one on the data. This is the only way I can
+        train this on my pc. A little problem is that there are bugs everywhere, probably.
+        Let's take a deep dive in how to train the autoencoder:
+
+
+AUTOENCODER TRAINING:
+    After some initial testings, it is probable that a general autoencoder
+    is way better than a specialised one. This raises a demand for lots of data.
+    The method I was using to prepare the data increased it's size 100-fold (numOfCandles-fold).
+    The much better approach is to put the normalised candles in a 1D tensor and say to
+    the torch module to apply a sliding window with a step of 3 and length of 100 to it.
+
+    On paper, it is pretty simple, now that I wrote it down. Then where did I fail?
+
+    Let's write the training steps in pseudocode:
+    1) get the data:
+        This step is trivial, I already have the functions for it.
+        The function is getNormCandles() from dataGetter.py
+        The returned candles are given as a pd.DataFrame.
+
+    2) Prepare the candles:
+        The goal is to turn them into a data structure that is accepted by torch
+        and can be seen with a sliding window. It seems that the appropriate structure
+        is a torch tensor. I basically need a really long vector that contains
+        all the normalised candles, flattened. I then want torch to read it using a
+        sliding window, as mentioned.
+        Do I really need to use a tensor?
+        Which dimensions should it have?
+
+    3) Train iterate through the data using the sliding window:
+        It seems that the "correct" way of implementing a sliding window is
+        to make a child of the class Dataset. Did I implement it right? Does it really work?
+        Using the custom dataset, the model should correctly train with the candles window
+
+    4) Use the encoder:
+        Since we also have to use this, here are the steps.
+        We have some candles dataFrame as an input, which we need to:
+        - get only the last 100 candles
+        - normalise them
+        - flatten them
+        - turn them into a tensor
+        And then we can feed it to the autoencoder. The result is a dataPoint of the
+        candle window.
+
+    5) KNN:
+        Since I mentioned dataPoints, here is a breakdown of the knn that I want to
+        set up.
+        As mentioned above, we get a dataPoint through the autoencoder. When fitting
+        the KNN model, we have to keep track which range of indexes belongs to which
+        dataset, to then correctly simulate the position.
+
+
+So now that I put this down in words, here is how I should implement this:
+    1) Autoencoder training:
+        1.1) Data preparation
+            1.1.1) Get normalised candles
+            1.1.2) Flatten them
+            1.1.3) Convert them to a tensor
+        1.2) Data feeding
+            1.2.1) Create the sliding window dataset
+            1.2.2) initialise it and feed it the tensor
+
+    2) KNN model:
+        1) Fit the model:
+            1.1) Get the train candles
+            1.2)
+
+    Who am I kidding... I don't know enough about torch to write this
+    Let's go on a study trip :>
+    I'll start with this: https://www.youtube.com/playlist?list=PLCC34OHNcOtpcgR9LEYSdi9r7XIbpkpK1
+    Also, here is the documentation: https://pytorch.org/docs/stable/index.html
+
+        2) Use the model
