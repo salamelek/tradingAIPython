@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader, TensorDataset, Dataset
+from torch.utils.data import DataLoader, Dataset
 
 
 class Autoencoder(nn.Module):
@@ -34,10 +34,8 @@ class Autoencoder(nn.Module):
             nn.Tanh()
         )
 
-    def forward(self, x):
-        encoded = self.encoder(x)
-        decoded = self.decoder(encoded)
-        return encoded, decoded
+    def forward(self, x) -> torch.Tensor:
+        return self.decoder(self.encoder(x))
 
     def encode(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -52,17 +50,23 @@ class Autoencoder(nn.Module):
 
 
 class SlidingWindowDataset(Dataset):
-    def __init__(self, data, window, step):
+    def __init__(self, data: torch.Tensor, window: int, step: int):
         self.data = data
         self.window = window
         self.step = step
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int) -> torch.Tensor:
         index *= self.step
+
+        if index + self.window > len(self.data):
+            raise IndexError("Index out of range")
+
         return self.data[index:index+self.window]
 
-    def __len__(self):
-        return (len(self.data) - self.window) // self.step + 1
+    def __len__(self) -> int:
+        maxStartIndex = len(self.data) - self.window
+
+        return max(0, maxStartIndex // self.step + 1)
 
 
 def trainAutoencoder(model: Autoencoder, trainCandles: np.ndarray, validCandles: np.ndarray, candlesNum: int, candleFeaturesNum: int, epochs=100, batchSize=32, lr=0.001, device='cpu') -> None:
@@ -88,7 +92,7 @@ def trainAutoencoder(model: Autoencoder, trainCandles: np.ndarray, validCandles:
     train_dataset = SlidingWindowDataset(trainData, windowSize, candleFeaturesNum)
     val_dataset = SlidingWindowDataset(validData, windowSize, candleFeaturesNum)
 
-    train_loader = DataLoader(train_dataset, batch_size=batchSize, shuffle=False)
+    train_loader = DataLoader(train_dataset, batch_size=batchSize, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=batchSize, shuffle=False)
 
     # Optimizer and loss
@@ -98,7 +102,6 @@ def trainAutoencoder(model: Autoencoder, trainCandles: np.ndarray, validCandles:
     # Training loop
     model.to(device)
     for epoch in range(epochs):
-        # Training phase
         model.train()
         total_train_loss = 0
 
@@ -109,7 +112,7 @@ def trainAutoencoder(model: Autoencoder, trainCandles: np.ndarray, validCandles:
 
             batch = batch.to(device)
             optimizer.zero_grad()
-            _, reconstructed = model(batch)
+            reconstructed = model(batch)
             loss = criterion(reconstructed, batch)
             loss.backward()
             optimizer.step()
@@ -123,7 +126,7 @@ def trainAutoencoder(model: Autoencoder, trainCandles: np.ndarray, validCandles:
         with torch.no_grad():
             for batch in val_loader:
                 batch = batch[0].to(device)
-                _, reconstructed = model(batch)
+                reconstructed = model(batch)
                 loss = criterion(reconstructed, batch)
                 total_val_loss += loss.item()
 

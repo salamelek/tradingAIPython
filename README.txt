@@ -146,9 +146,15 @@ So now that I put this down in words, here is how I should implement this:
             1.1) Get the train candles
             1.2)
 
+        2) Use the model
+
     Who am I kidding... I don't know enough about torch to write this
     Let's go on a study trip :>
     I'll start with this: https://www.youtube.com/playlist?list=PLCC34OHNcOtpcgR9LEYSdi9r7XIbpkpK1
     Also, here is the documentation: https://pytorch.org/docs/stable/index.html
 
-        2) Use the model
+
+PyTorch study:
+    Tensors:
+        https://pytorch.org/docs/stable/tensors.html
+        Just like arrays, but more powerful

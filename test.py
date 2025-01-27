@@ -1,25 +1,17 @@
 from autoencoder import *
 from dataGetter import *
 
+xrpCandles = getNormCandles("./marketData/XRPUSDT-5m-2020-23").to_numpy()
+ethCandles = getNormCandles("./marketData/ETHUSDT-5m-2020-24").to_numpy()
+btcCandles = getNormCandles("./marketData/BTCUSDT-5m-2020-24").to_numpy()
 
-autoencoder = Autoencoder(inputSize=300, bottleneckSize=10)
-autoencoder.load_state_dict(torch.load("eth+xrp_300-100-50-10", weights_only=True, map_location=torch.device('cpu')))
-autoencoder.eval()
+trainCandles = np.concatenate([xrpCandles, ethCandles, btcCandles], axis=0)
 
+# 1D tensor
+inputTensor = torch.from_numpy(trainCandles).double().reshape(-1)
 
-xrpData = getShapedData("./marketData/XRPUSDT-5m-2020-23", 100)
-ethData = getShapedData("./marketData/ETHUSDT-5m-2020-24", 100)
+window = 6
+step = 3
+swd = SlidingWindowDataset(inputTensor, window, step)
 
-
-# autoencoder pass
-xrpTensor = torch.from_numpy(xrpData).float().to("cpu")
-ethTensor = torch.from_numpy(ethData).float().to("cpu")
-
-compressedXrp = autoencoder.encode(xrpTensor)
-compressedEth = autoencoder.encode(ethTensor)
-
-print("XRP:")
-print(compressedXrp)
-
-print("ETH:")
-print(compressedEth)
+dl = DataLoader(swd, batch_size=100)
