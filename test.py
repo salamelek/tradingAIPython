@@ -2,24 +2,20 @@ from autoencoder import *
 from dataGetter import *
 
 validCandles = getNormCandles("./marketData/XRPUSDT-5m-2024").to_numpy()
-print(validCandles)
-
 candlesTensor = torch.Tensor(validCandles).double().reshape(-1)
-print(candlesTensor)
 
-first100 = candlesTensor[:300]
-print("Original:")
-print(first100[:10])
+first10 = candlesTensor[:30]
 
-candlesNum = 100
-candleFeaturesNum = 3
-inputSize = candlesNum * candleFeaturesNum
-bottleneck = 20
+dimensions = [30, 10, 5]
 
-ae = Autoencoder(inputSize, bottleneck).double()
-ae.load_state_dict(torch.load("ae_test_3", weights_only=True, map_location=torch.device('cpu')))
+ae = Autoencoder(dimensions).double()
+ae.load_state_dict(torch.load("ae_miniTest_30-10-5", weights_only=True, map_location=torch.device('cpu')))
 ae.eval()
 
-reconstructed = ae.forward(first100)
+reconstructed = ae.forward(first10)
+
+
+print("Original:")
+print(first10)
 print("Reconstructed:")
-print(reconstructed[:10])
+print(reconstructed)

@@ -6,35 +6,31 @@ from torch.utils.data import DataLoader, Dataset
 
 
 class Autoencoder(nn.Module):
-    def __init__(self, inputSize, bottleneckSize):
+    def __init__(self, dimensions):
         """
         Initialize the autoencoder model.
-        :param inputSize: Number of input features (e.g., 4 features * 100 candles = 400)
-        :param bottleneckSize: Size of the bottleneck (compressed representation)
+        :param dimensions: a list with the dimensions of each layer
         """
         super(Autoencoder, self).__init__()
 
-        # Encoder
-        self.encoder = nn.Sequential(
-            nn.Linear(inputSize, 100),
-            nn.Tanh(),
-            nn.Linear(100, 50),
-            nn.Tanh(),
-            nn.Linear(50, bottleneckSize),
-            nn.Tanh()
-        )
+        if len(dimensions) < 2:
+            raise ValueError('The dimensions list should contain at least 2 dimensions!')
+
+        encoder_layers = []
+        for i in range(len(dimensions) - 1):
+            encoder_layers.append(nn.Linear(dimensions[i], dimensions[i + 1]))
+            encoder_layers.append(nn.Tanh())
 
         # Decoder
-        self.decoder = nn.Sequential(
-            nn.Linear(bottleneckSize, 50),
-            nn.Tanh(),
-            nn.Linear(50, 100),
-            nn.Tanh(),
-            nn.Linear(100, inputSize),
-            nn.Tanh()
-        )
+        decoder_layers = []
+        for i in range(len(dimensions) - 1, 0, -1):
+            decoder_layers.append(nn.Linear(dimensions[i], dimensions[i - 1]))
+            decoder_layers.append(nn.Tanh())
 
-    def forward(self, x) -> torch.Tensor:
+        self.encoder = nn.Sequential(*encoder_layers)
+        self.decoder = nn.Sequential(*decoder_layers)
+
+    def forward(self, x):
         return self.decoder(self.encoder(x))
 
     def encode(self, x: torch.Tensor) -> torch.Tensor:
