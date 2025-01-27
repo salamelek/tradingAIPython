@@ -1,17 +1,25 @@
 from autoencoder import *
 from dataGetter import *
 
-xrpCandles = getNormCandles("./marketData/XRPUSDT-5m-2020-23").to_numpy()
-ethCandles = getNormCandles("./marketData/ETHUSDT-5m-2020-24").to_numpy()
-btcCandles = getNormCandles("./marketData/BTCUSDT-5m-2020-24").to_numpy()
+validCandles = getNormCandles("./marketData/XRPUSDT-5m-2024").to_numpy()
+print(validCandles)
 
-trainCandles = np.concatenate([xrpCandles, ethCandles, btcCandles], axis=0)
+candlesTensor = torch.Tensor(validCandles).double().reshape(-1)
+print(candlesTensor)
 
-# 1D tensor
-inputTensor = torch.from_numpy(trainCandles).double().reshape(-1)
+first100 = candlesTensor[:300]
+print("Original:")
+print(first100[:10])
 
-window = 6
-step = 3
-swd = SlidingWindowDataset(inputTensor, window, step)
+candlesNum = 100
+candleFeaturesNum = 3
+inputSize = candlesNum * candleFeaturesNum
+bottleneck = 20
 
-dl = DataLoader(swd, batch_size=100)
+ae = Autoencoder(inputSize, bottleneck).double()
+ae.load_state_dict(torch.load("ae_test_3", weights_only=True, map_location=torch.device('cpu')))
+ae.eval()
+
+reconstructed = ae.forward(first100)
+print("Reconstructed:")
+print(reconstructed[:10])
