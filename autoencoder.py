@@ -18,13 +18,17 @@ class Autoencoder(nn.Module):
 
         encoder_layers = []
         for i in range(len(dimensions) - 1):
-            encoder_layers.append(nn.Linear(dimensions[i], dimensions[i + 1]))
+            layer = nn.Linear(dimensions[i], dimensions[i + 1])
+            nn.init.xavier_uniform_(layer.weight)
+            encoder_layers.append(layer)
             encoder_layers.append(nn.Tanh())
 
         # Decoder
         decoder_layers = []
         for i in range(len(dimensions) - 1, 0, -1):
-            decoder_layers.append(nn.Linear(dimensions[i], dimensions[i - 1]))
+            layer = nn.Linear(dimensions[i], dimensions[i - 1])
+            nn.init.xavier_uniform_(layer.weight)
+            decoder_layers.append(layer)
             decoder_layers.append(nn.Tanh())
 
         self.encoder = nn.Sequential(*encoder_layers)
@@ -43,6 +47,10 @@ class Autoencoder(nn.Module):
 
         with torch.no_grad():
             return self.encoder(x)
+
+    def decode(self, x: torch.Tensor) -> torch.Tensor:
+        with torch.no_grad():
+            return self.decoder(x)
 
 
 class SlidingWindowDataset(Dataset):
@@ -93,7 +101,8 @@ def trainAutoencoder(model: Autoencoder, trainCandles: np.ndarray, validCandles:
 
     # Optimizer and loss
     optimizer = optim.Adam(model.parameters(), lr=lr)
-    criterion = nn.MSELoss()
+    # criterion = nn.MSELoss()
+    criterion = nn.SmoothL1Loss(beta=1.0)
 
     # Training loop
     model.to(device)

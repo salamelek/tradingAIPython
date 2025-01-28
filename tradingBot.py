@@ -13,7 +13,7 @@ if torch.cuda.is_available():
 
 # noinspection PyArgumentList
 class TradingBot:
-    def __init__(self, trainDataFolders: list, autoencoderFile: str, minDistThreshold=5e-06, minIndexDistance=10, candleWindowLen=100, sl=0.01, tp=0.02, normCandlesFeatureNum=3, dimNum=5, k=3, posMaxLen=100):
+    def __init__(self, trainDataFolders: list, autoencoderFile: str, dimensions: list, minDistThreshold=5e-06, minIndexDistance=10, candleWindowLen=100, sl=0.01, tp=0.02, normCandlesFeatureNum=3, dimNum=5, k=3, posMaxLen=100):
         """
         trainDataFolders: list folder names
         """
@@ -37,7 +37,7 @@ class TradingBot:
             self.normCandlesList.append(normaliseCandles(candles))
 
         # load autoencoder
-        self.autoencoder = Autoencoder(self.candleWindowLen * self.normCandlesFeatureNum, bottleneckSize=dimNum).double()
+        self.autoencoder = Autoencoder(dimensions).double()
         self.autoencoder.load_state_dict(torch.load(autoencoderFile, weights_only=True, map_location=torch.device('cpu')))
         self.autoencoder.eval()
 
