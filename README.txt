@@ -165,3 +165,7 @@ DeepSeek autoencoder analysis:
     - Tried a bit modifying the beta parameter
     - Tried to not shuffle (it works it seems?)
     - Tried cosine similarity (Does it really works so well?)
+
+
+Cosine similarity:
+    seems to yield better results, but I still have to fine tune it.

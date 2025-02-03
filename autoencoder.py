@@ -97,7 +97,7 @@ def trainAutoencoder(model: Autoencoder, trainCandles: np.ndarray, validCandles:
     val_dataset = SlidingWindowDataset(validData, windowSize, candleFeaturesNum)
 
     # TODO check the impact of shuffling
-    train_loader = DataLoader(train_dataset, batch_size=batchSize, shuffle=True)
+    train_loader = DataLoader(train_dataset, batch_size=batchSize, shuffle=False)
     val_loader = DataLoader(val_dataset, batch_size=batchSize, shuffle=False)
 
     # Optimizer and loss
