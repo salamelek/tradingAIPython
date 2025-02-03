@@ -6,10 +6,10 @@ bot = TradingBot(
     "ae_noShuffle_beta-03",
     [300, 100, 50, 25],
     sl=0.01,
-    tp=0.022,
-    minDistThreshold=0.12,
+    tp=0.02,
+    minDistThreshold=0,
     k=2,
-    posMaxLen=24,
+    posMaxLen=48,
     dimNum=25
 )
 

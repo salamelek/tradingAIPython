@@ -61,8 +61,9 @@ class TradingBot:
 
         # FAISS knn
         # with autoencoder
-        # self.knnIndex = faiss.IndexFlatL2(dimNum)
-        self.knnIndex = faiss.IndexFlatIP(dimNum)
+        # self.knnIndex = faiss.IndexFlatL2(dimNum) # euclidean distance
+        self.knnIndex = faiss.IndexFlatIP(dimNum)   # cosine similarity
+
         for encodedCandles in encodedCandlesList:
             # faiss only supports float32 apparently :p
             self.knnIndex.add(encodedCandles.astype(np.float32))
