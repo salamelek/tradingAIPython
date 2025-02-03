@@ -158,3 +158,10 @@ PyTorch study:
     Tensors:
         https://pytorch.org/docs/stable/tensors.html
         Just like arrays, but more powerful
+
+
+DeepSeek autoencoder analysis:
+    - Deleted that [0] in the validation loop of the autoencoder
+    - Tried a bit modifying the beta parameter
+    - Tried to not shuffle (it works it seems?)
+    - Tried cosine similarity (Does it really works so well?)

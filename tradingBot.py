@@ -61,7 +61,8 @@ class TradingBot:
 
         # FAISS knn
         # with autoencoder
-        self.knnIndex = faiss.IndexFlatL2(dimNum)
+        # self.knnIndex = faiss.IndexFlatL2(dimNum)
+        self.knnIndex = faiss.IndexFlatIP(dimNum)
         for encodedCandles in encodedCandlesList:
             # faiss only supports float32 apparently :p
             self.knnIndex.add(encodedCandles.astype(np.float32))
@@ -150,7 +151,14 @@ class TradingBot:
             return 0, "No enough neighbours"
 
         # no good enough neighbours
+        # Euclidean distance (high value for ew, 0 for good)
+        """
         if distances[-1] > self.minDistThreshold:
+            return 0, f"No good enough neighbours (worst: {distances[-1]})"
+        """
+
+        # cosine similarity (-1 for ew, 1 for good)
+        if distances[-1] < self.minDistThreshold:
             return 0, f"No good enough neighbours (worst: {distances[-1]})"
 
         """
