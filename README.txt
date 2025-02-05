@@ -169,3 +169,40 @@ DeepSeek autoencoder analysis:
 
 Cosine similarity:
     seems to yield better results, but I still have to fine tune it.
+
+
+I've hit a plateau:
+    With the new changes, it seems that the profit factor is stuck around 1.3
+    Granted, I didn't implement those fancy profit factor amplification methods,
+    but I didn't implement fees either.
+
+    So what now?
+    I really have no idea. I think that I want a plain profit factor of at least 1.5
+    before committing to other improvements.
+
+    I downloaded a year of doge data to test on, but the results are always the same:
+    Somewhat positive, but waaay too close to neutral. Which is a kind of positive result.
+    It means that I was right in thinking that the kline has prediction power, but
+    it seems not nearly enough.. or maybe I'm just not extracting it right?
+    
+
+Potential issues:
+	1) Normalization of candles:
+		The current normalization (tanh(h/o-1), ...) does normalize well,
+		but the normalized candles lose the measure of volatility.
+	
+	2) Autoencoder:
+		Is it needed? What is the optimal bottleneck?
+		If dimensionality reduction is needed, consider also PCA or t-SNE
+	
+	3) KNN:
+		Could use a probabilistic threshold for how many neighbours go in the same direction
+		instead of using only 100% match
+	
+	4) Temporal awareness:
+		Throwing everything in a flattened vector, then autoencoder and then KNN, 
+		absolutley destroys the temporal dependencies of the data. Consider using a
+		CNN, RNN, LSTM or Transformer, to mantain the temporal dependencies.
+	
+	5) Other data:
+		Instead of using only the kline, try using the orderbook or other things.    

@@ -11,7 +11,6 @@ if torch.cuda.is_available():
     device = "cuda"
 
 
-# noinspection PyArgumentList
 class TradingBot:
     def __init__(self, trainDataFolders: list, autoencoderFile: str, dimensions: list, minDistThreshold=5e-06, minIndexDistance=10, candleWindowLen=100, sl=0.01, tp=0.02, normCandlesFeatureNum=3, dimNum=5, k=3, posMaxLen=100):
         """
@@ -162,11 +161,6 @@ class TradingBot:
         if distances[-1] < self.minDistThreshold:
             return 0, f"No good enough neighbours (worst: {distances[-1]})"
 
-        """
-        [1.6416595e-07, 3.722046e-07, 4.9566995e-07, 5.3198426e-07, 7.001139e-07]
-        [177451, 383051, 112201, 222643, 95730]
-        """
-
         # simulate nns
         candleIndexes = [(knnIndex + self.candleWindowLen - 1) for knnIndex in indexes]
 
@@ -180,15 +174,14 @@ class TradingBot:
 
                 if candleIndex >= currLen and j < len(self.candlesList) - 1:
                     lenSum += currLen
+                    candleIndex -= currLen  # Adjust candleIndex for the next dataset
                     continue
 
                 trainCandlesIndex = j
-                candleIndex -= lenSum
-                break
+                break  # Found the correct dataset
 
             longRes = simulatePosition(self.candlesList[trainCandlesIndex], candleIndex + 1, 1, self.tp, self.sl, self.posMaxLen)
             shortRes = simulatePosition(self.candlesList[trainCandlesIndex], candleIndex + 1, -1, self.tp, self.sl, self.posMaxLen)
-
             if longRes == 1:
                 posTot += 1
 

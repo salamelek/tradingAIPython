@@ -1,23 +1,46 @@
-from autoencoder import *
+import plotly.graph_objects as go
+import pandas as pd
 from dataGetter import *
 
-validCandles = getNormCandles("./marketData/XRPUSDT-5m-2024").to_numpy()
-candlesTensor = torch.Tensor(validCandles).double().reshape(-1)
+# Load the data
+df = getCandles("./marketData/XRPUSDT-5m-2024")
+df = df.reset_index()  # Ensure 'open_time' is a column
+df = df[:100]
 
-first10 = candlesTensor[:300]
+# Example positions (start_time, end_time)
+positions = [
+    {'start_time': '2024-01-01 12:00', 'end_time': '2024-01-01 14:00', 'color': 'rgba(0, 255, 0, 0.5)'},  # Green rectangle
+    {'start_time': '2024-01-02 08:00', 'end_time': '2024-01-02 10:00', 'color': 'rgba(255, 0, 0, 0.5)'},  # Red rectangle
+]
 
-dimensions = [300, 100, 50, 25]
+# Create the candlestick chart
+fig = go.Figure(data=[go.Candlestick(
+    x=df['open_time'],
+    open=df['Open'],
+    high=df['High'],
+    low=df['Low'],
+    close=df['Close']
+)])
 
-ae = Autoencoder(dimensions).double()
-ae.load_state_dict(torch.load("ae_300-100-50-25", weights_only=True, map_location=torch.device('cpu')))
-ae.eval()
+# Add rectangles for each position
+for pos in positions:
+    fig.add_shape(
+        type="rect",
+        x0=pos['start_time'],
+        x1=pos['end_time'],
+        y0=df['Low'].min(),  # Bottom of the rectangle (minimum price)
+        y1=df['High'].max(),  # Top of the rectangle (maximum price)
+        line=dict(color=pos['color'], width=0),  # No border
+        fillcolor=pos['color'],  # Fill color with transparency
+        layer="below",  # Place the rectangle below the candlesticks
+        opacity=0.2  # Transparency of the rectangle
+    )
 
-reconstructed = ae.decode(ae.encode(first10))
+# Update layout
+fig.update_layout(
+    xaxis=dict(rangeslider=dict(visible=True)),
+    title='Candlestick Chart with Positions'
+)
 
-print("Original:")
-print(first10[:10])
-print("Reconstructed:")
-print(reconstructed[:10])
-
-print("Difference:")
-print(first10 - reconstructed)
+# Show the chart
+fig.show()

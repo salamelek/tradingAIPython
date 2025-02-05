@@ -2,18 +2,18 @@ from tradingBot import *
 
 
 bot = TradingBot(
-    ["./marketData/XRPUSDT-5m-2020-23", "./marketData/ETHUSDT-5m-2020-24", "./marketData/BTCUSDT-5m-2020-24"],
+    ["./marketData/XRPUSDT-5m-2020-23", "./marketData/ETHUSDT-5m-2020-24", "./marketData/BTCUSDT-5m-2020-24", "./marketData/XRPUSDT-5m-2024"],
     "ae_noShuffle_beta-03",
     [300, 100, 50, 25],
     sl=0.01,
     tp=0.02,
-    minDistThreshold=0,
+    minDistThreshold=0.12,
     k=2,
-    posMaxLen=48,
+    posMaxLen=24,
     dimNum=25
 )
 
-candles = getCandles("./marketData/XRPUSDT-5m-2024")
+candles = getCandles("./marketData/DOGEUSDT-5m-2024")
 
 print("Backtesting...")
 tp = 0.02
