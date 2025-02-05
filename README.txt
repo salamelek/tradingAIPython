@@ -197,12 +197,16 @@ Potential issues:
 	
 	3) KNN:
 		Could use a probabilistic threshold for how many neighbours go in the same direction
-		instead of using only 100% match
+		instead of using only 100% match. Expanding on that, the function predict()
+		could return a float instead of an int, still in the range [-1, 1], but 0.1 would mean
+		that the prediction is really weak.
 	
 	4) Temporal awareness:
 		Throwing everything in a flattened vector, then autoencoder and then KNN, 
-		absolutley destroys the temporal dependencies of the data. Consider using a
-		CNN, RNN, LSTM or Transformer, to mantain the temporal dependencies.
-	
+		absolutely destroys the temporal dependencies of the data. Consider using a
+		CNN, RNN, LSTM or Transformer, to maintain the temporal dependencies.
+		Look into "Multivariate time series forecasting"
+		Look also into how to incorporate values that are not dependent on time (volume)
+
 	5) Other data:
 		Instead of using only the kline, try using the orderbook or other things.    
