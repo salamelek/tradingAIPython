@@ -210,3 +210,47 @@ Potential issues:
 
 	5) Other data:
 		Instead of using only the kline, try using the orderbook or other things.    
+
+
+LSTM model:
+    The main difference here is that I have to label the data.
+    I guess that I have to set a time range and then mark the price at the end of it.
+    Or another method would be to set a tp and sl and then count how many candles does it need to reach it.
+
+    Data labeling:
+        - Next candle?
+        - Price in n candles?
+        - sl/tp - -1 1
+        
+
+What data to use?
+	The data is the first stone on which this church will be built. With trash data we can expect trash results.
+	
+
+	OHLC:
+		The standard data for any trader
+		
+	Technical indicators:
+		They give signals based on price action movement
+		Might be a pain in the ass to calculate
+	
+	Orderbook:
+		Could be helpful to get some insight in the market depth,
+		but it has lots of data that needs to be interpreted just right.
+	
+	Volume:
+		Could be useful, maybe look into VWAP
+
+
+New idea while running:
+    It's not new, but I think I could revisit using various indicators in a KNN model.
+    Instead of only using RSI, ADX and whatever, I could put in like 10 different indicators
+    and maybe also the autoencoder output.
+    The big problem here is to normalise the data such that one feature does not overshadow everything else.
+
+    Examples for scaling:
+        Ranged (from x to y): minmax scaling
+        Unbounded (SMA, EMA): z-score normalization
+        Boolean: keep it 0 1
+        Vectors (autoencoder): L2 normalization
+        Volatility like ATR: log + z-score

@@ -8,7 +8,7 @@ bot = TradingBot(
     sl=0.01,
     tp=0.02,
     minDistThreshold=0.12,
-    k=2,
+    k=1,
     posMaxLen=24,
     dimNum=25
 )
@@ -16,8 +16,8 @@ bot = TradingBot(
 candles = getCandles("./marketData/DOGEUSDT-5m-2024")
 
 print("Backtesting...")
-tp = 0.02
 sl = 0.01
+tp = 0.02
 wins = 0
 losses = 0
 for i in range(50000):
