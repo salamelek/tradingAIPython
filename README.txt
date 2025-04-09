@@ -254,3 +254,93 @@ New idea while running:
         Boolean: keep it 0 1
         Vectors (autoencoder): L2 normalization
         Volatility like ATR: log + z-score
+        
+
+How to truly backtest:
+	https://www.youtube.com/watch?v=NLBXgSmRBgU
+
+	To get an optimal strategy, we have to have:
+		1) A strategy idea
+			Example: KNN model
+		2) Development data
+			Example: 3 years of XRP 5min
+		3) An optimiser:
+			Example: K parameter, distance function, max position len, ...
+	
+	1) In-sample excellence:
+		We first have to create the stratregy's signal AT EACH BAR: -1 sell, 0 hold, 1 buy
+			I'm guessing that i could use non integer values in case of different tp/sl or position
+			sizes. Then we compute the strategy's return (close to close) FOR EACH BAR. With these granular results we
+			can then really get a nicer approximation of the results. This is usually done by checking
+			the profits at each trade, but doing it this way brings up much more information.
+			By cumulative summing up all of the granular results, we get a crude backtest.
+			
+			Programming tip:
+				we have a pandas DF with all the candles.
+				We then run our strategy and add a column for position (assuming only 1 position at a time, mor columns for more positions at a time)
+				We add a column "strategy_signal" that will contain -1 (short) 1 (long) 0 (hold) values
+				Then to get the returns for each candle is as simple as running this:
+					df["return"] = np.log(df["close"]).diff().shift(-1)		# logged difference of close to close candle
+					df["strategy_return"] = df["return"] * strategy_signal 	# *0 will nullify, -1 sell and 1 buy
+			
+			Looking at this crude backtest we have to ask ourselves:
+				IS THIS EXCELLENT?
+					no -  polish the strategy further
+					yes - nice
+				IS THIS OBVIOUSLY OVERFIT?
+					yes - 			simplify the strategy
+					not obviously - continue with testing
+			
+			Now that we have a seemingly excellent strategy, we have to ask ourselves this:
+				Was this excellent performance found due to patterns intrinsic in the data
+				or just because we optimised the strategy a bit too much?
+				
+				Any strategy will have a nice performance if we optimise it enough, but a good
+				strategy will be good even with little optimisation.
+				To test further, we have to assume that our strategy is trash. To disprove this
+				belief, we will run the In-sample permutation test. If it performs worse there,
+				there is a good chance that our strategy was not worthless.
+				
+	2) In-sample permutation test
+		We first create permutations of the data that the strategy was optimised on (about 1000).
+		Then we run our crude backtest on each of them. If our original optimisation outperforms the
+		vast majority of the permutations, we could start to assume that the strategy is not really overfit,
+		but it actually seeks patterns in the price action.
+		
+		But of course, this permutation test destroys any data involving volume, long memory stuff and serial correlation.
+		So any strategy that uses those parameters will be obviously better in non-permutations. Anyhow, this is not a bad
+		test, since if it performs average as the permutations, it is obviously overfitted.
+		
+		A good strategy should outperform AT LEAST 99% of the permutated tests.
+		IMPORTANT: that 99% is only indicative, if you fiddle enough with any strategy, it will pass it. DON'T OVERUSE IT
+		
+		This step will take lots of time, since you should aim at like 1000 permutations, which
+			means optimising the strategy 1000 times. We shall see how slow the KNN stuff is :')
+			
+		But why not use validation data?
+			Well, because once used, you can't use it anymore (from personal experience :')
+			So instead of wasting that precious validation data, we first run the algo on permutations.
+			Then MAYBE if it performs well, we will test it on the val data.
+		
+	So now that we have an excellent algorythm, that performs better on real data than on permutations, lets continue.
+		
+	3) Walk forward test:
+		Once we know that our algo outperforms random permutations, we can test it on some future validation data.
+		The algorythm is expected to perform worse on this data, since there is no bias (assuming it's 100% fresh data, never tested before)
+		After this test we can ask ourselves if this algorythm's performance is worth trading. 
+		
+	4) Walk forward permutation test
+		Just to make sure of the results, we can permutate the validation data.
+		Our algo should outperform the vast amjority of the permutations of the validation data.
+		The difference in strategies will be much smaller than before, since this is data that has not
+		been optimised on. Of course, the better it outperforms the permutations, the best the strategy is.
+		
+	So if the walk forward test gives a good profit factor AND the walk forward permutation test is promising, the strategy can be traded.
+
+
+Books to read:
+	https://www.youtube.com/watch?v=ftFptCxm5ZU
+
+	- Systematic trading - Robert Carver
+	- Permutation and randomization tests for trading system development algorythms in C++ - Timothy Masters
+	- Testing and Tuning Market Trading Systems - Timothy Masters
