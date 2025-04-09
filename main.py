@@ -8,30 +8,66 @@ bot = TradingBot(
     sl=0.01,
     tp=0.02,
     minDistThreshold=0.12,
-    k=1,
+    k=2,
     posMaxLen=24,
     dimNum=25
 )
 
-candles = getCandles("./marketData/DOGEUSDT-5m-2024")
+candles = getCandles("./marketData/XRPUSDT-5m-2024")
+
 
 print("Backtesting...")
 sl = 0.01
 tp = 0.02
-wins = 0
-losses = 0
-for i in range(50000):
-    predictedPos, reason = bot.predict(candles[:100 + i])
 
-    if predictedPos == 0:
-        # print(f"\r{reason}", end="")
-        continue
+open_position = None  # None or dict like {'type': 1, 'entry_price': float, 'entry_index': int}
+positions = np.zeros(len(candles), dtype=np.int8)
 
-    win = simulatePosition(candles, 100+i, predictedPos, tp, sl)
+for i in range(len(candles) - 100):
+    print(f"\r{i}/{len(candles)}", end="")
 
-    if win == 1:
-        wins += 1
+    current_candle = candles.iloc[100 + i]
+    current_price = current_candle["Close"]
+
+    # Check if there is an open position
+    if open_position:
+        # Fetch high and low of the current candle
+        high = current_candle["High"]
+        low = current_candle["Low"]
+
+        entry_price = open_position["entry_price"]
+        direction = open_position["type"]
+
+        # Check for TP/SL hit
+        if direction == 1:  # long
+            if high >= entry_price * (1 + tp):
+                open_position = None
+            elif low <= entry_price * (1 - sl):
+                open_position = None
+            else:
+                positions[100 + i] = 1
+
+        elif direction == -1:  # short
+            if low <= entry_price * (1 - tp):
+                open_position = None
+            elif high >= entry_price * (1 + sl):
+                open_position = None
+            else:
+                positions[100 + i] = -1
+
     else:
-        losses += 1
+        # No position open — check for new signal
+        predictedPos, reason = bot.predict(candles.iloc[i:100 + i])  # window of 100
 
-    print(f"\r[{i}] Wins: {wins}, Losses: {losses}, Profit factor: {('NaN' if losses == 0 else round((wins / losses) * (tp / sl), 2))}", end="")
+        if predictedPos != 0:
+            open_position = {
+                "type": predictedPos,  # 1 for long, -1 for short
+                "entry_price": current_price,
+                "entry_index": 100 + i
+            }
+
+candles["strategy_position"] = positions
+
+print()
+print(candles)
+candles.to_csv("backtested-candles-overfit.csv")
