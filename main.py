@@ -1,7 +1,7 @@
 from tradingBot import *
 
 
-bot = TradingBot(
+botKNN = TradingBotKNN(
     ["./marketData/XRPUSDT-5m-2020-23", "./marketData/ETHUSDT-5m-2020-24", "./marketData/BTCUSDT-5m-2020-24", "./marketData/XRPUSDT-5m-2024"],
     "ae_noShuffle_beta-03",
     [300, 100, 50, 25],
@@ -13,12 +13,14 @@ bot = TradingBot(
     dimNum=25
 )
 
+botSMA = TradingBotSMA(10, 15)
+
 candles = getCandles("./marketData/XRPUSDT-5m-2024")
 
 
 print("Backtesting...")
 sl = 0.01
-tp = 0.02
+tp = 0.01
 
 open_position = None  # None or dict like {'type': 1, 'entry_price': float, 'entry_index': int}
 positions = np.zeros(len(candles), dtype=np.int8)
@@ -57,7 +59,7 @@ for i in range(len(candles) - 100):
 
     else:
         # No position open — check for new signal
-        predictedPos, reason = bot.predict(candles.iloc[i:100 + i])  # window of 100
+        predictedPos, reason = botSMA.predict(candles.iloc[i:100 + i])  # window of 100
 
         if predictedPos != 0:
             open_position = {
@@ -70,4 +72,4 @@ candles["strategy_position"] = positions
 
 print()
 print(candles)
-candles.to_csv("backtested-candles-overfit.csv")
+candles.to_csv("backtested-candles-SMA.csv")

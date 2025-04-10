@@ -1,46 +1,26 @@
-import plotly.graph_objects as go
 import pandas as pd
-from dataGetter import *
+import numpy as np
+import matplotlib.pyplot as plt
 
-# Load the data
-df = getCandles("./marketData/XRPUSDT-5m-2024")
-df = df.reset_index()  # Ensure 'open_time' is a column
-df = df[:100]
+candles = pd.read_csv("backtested-candles-SMA.csv")
 
-# Example positions (start_time, end_time)
-positions = [
-    {'start_time': '2024-01-01 12:00', 'end_time': '2024-01-01 14:00', 'color': 'rgba(0, 255, 0, 0.5)'},  # Green rectangle
-    {'start_time': '2024-01-02 08:00', 'end_time': '2024-01-02 10:00', 'color': 'rgba(255, 0, 0, 0.5)'},  # Red rectangle
-]
+fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, figsize=(12, 6))
 
-# Create the candlestick chart
-fig = go.Figure(data=[go.Candlestick(
-    x=df['open_time'],
-    open=df['Open'],
-    high=df['High'],
-    low=df['Low'],
-    close=df['Close']
-)])
+# Plot Close price
+ax1.plot(candles["Close"], label="Close Price", color="blue")
+ax1.set_ylabel("Price")
+ax1.set_title("Price Chart")
 
-# Add rectangles for each position
-for pos in positions:
-    fig.add_shape(
-        type="rect",
-        x0=pos['start_time'],
-        x1=pos['end_time'],
-        y0=df['Low'].min(),  # Bottom of the rectangle (minimum price)
-        y1=df['High'].max(),  # Top of the rectangle (maximum price)
-        line=dict(color=pos['color'], width=0),  # No border
-        fillcolor=pos['color'],  # Fill color with transparency
-        layer="below",  # Place the rectangle below the candlesticks
-        opacity=0.2  # Transparency of the rectangle
-    )
+# Plot strategy positions
+ax2.plot(candles["strategy_position"], label="Strategy Position", color="orange")
+ax2.set_ylabel("Position")
+ax2.set_title("Strategy Signal")
 
-# Update layout
-fig.update_layout(
-    xaxis=dict(rangeslider=dict(visible=True)),
-    title='Candlestick Chart with Positions'
-)
+# Add grid and legends
+ax1.grid(True)
+ax2.grid(True)
+ax1.legend()
+ax2.legend()
 
-# Show the chart
-fig.show()
+plt.tight_layout()
+plt.show()

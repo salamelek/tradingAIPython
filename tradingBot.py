@@ -11,7 +11,7 @@ if torch.cuda.is_available():
     device = "cuda"
 
 
-class TradingBot:
+class TradingBotKNN:
     def __init__(self, trainDataFolders: list, autoencoderFile: str, dimensions: list, minDistThreshold=5e-06, minIndexDistance=10, candleWindowLen=100, sl=0.01, tp=0.02, normCandlesFeatureNum=3, dimNum=5, k=3, posMaxLen=100):
         """
         trainDataFolders: list folder names
@@ -192,3 +192,38 @@ class TradingBot:
                 return 0, "Disagreement"
 
         return int(posTot / self.k), ""
+
+
+class TradingBotSMA:
+    def __init__(self, p1: int, p2: int):
+        self.p1 = p1
+        self.p2 = p2
+        self.prev_state = None  # Track previous relationship between SMAs
+
+    def predict(self, candles: pd.DataFrame) -> (int, str):
+        if len(candles) < max(self.p1, self.p2) + 1:
+            return 0, "Not enough data"
+
+        close = candles["Close"]
+        sma1 = close.rolling(window=self.p1).mean()
+        sma2 = close.rolling(window=self.p2).mean()
+
+        # Current relationship
+        current_state = 'above' if sma1.iloc[-1] > sma2.iloc[-1] else 'below'
+
+        # Only generate signal if crossover JUST happened
+        signal = 0
+        reason = "No crossover"
+
+        if self.prev_state is not None:
+            if self.prev_state == 'below' and current_state == 'above':
+                signal = 1
+                reason = "SMA crossover up (buy signal)"
+            elif self.prev_state == 'above' and current_state == 'below':
+                signal = -1
+                reason = "SMA crossover down (sell signal)"
+
+        # Update previous state for next call
+        self.prev_state = current_state
+
+        return signal, reason
