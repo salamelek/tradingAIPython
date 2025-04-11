@@ -227,3 +227,16 @@ class TradingBotSMA:
         self.prev_state = current_state
 
         return signal, reason
+
+
+class TradingBotIndicatorKnn:
+    def __init__(self):
+        pass
+
+    def calculateIndicators(self):
+        pass
+
+    def predict(self, candles: pd.DataFrame) -> (int, str):
+
+
+        return 0, ""

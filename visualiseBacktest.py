@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Load data
-candles = pd.read_csv("backtest-KNN.csv", parse_dates=['open_time'], index_col='open_time')  # adjust date column name
+candles = pd.read_csv("backtest-knn-xrp20-23.csv", parse_dates=['open_time'], index_col='open_time')  # adjust date column name
 # candles = candles[:10000]
 
 

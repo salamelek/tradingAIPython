@@ -62,7 +62,20 @@ def vectorized_backtest(candles, entry_signals, sl, tp, max_positions=1):
 
 botSMA = TradingBotSMA(5, 10)
 botKNN = TradingBotKNN(
-    ["./marketData/XRPUSDT-5m-2020-23"],#, "./marketData/ETHUSDT-5m-2020-24", "./marketData/BTCUSDT-5m-2020-24", "./marketData/DOGEUSDT-5m-2024"],
+    [
+        "./marketData/XRPUSDT-5m-2020",
+        "./marketData/XRPUSDT-5m-2021",
+        "./marketData/XRPUSDT-5m-2022",
+        "./marketData/XRPUSDT-5m-2023",
+        #"./marketData/ETHUSDT-5m-2020",
+        #"./marketData/ETHUSDT-5m-2021",
+        #"./marketData/ETHUSDT-5m-2022",
+        #"./marketData/ETHUSDT-5m-2023",
+        #"./marketData/BTCUSDT-5m-2020",
+        #"./marketData/BTCUSDT-5m-2021",
+        #"./marketData/BTCUSDT-5m-2022",
+        #"./marketData/BTCUSDT-5m-2023",
+    ],
     "ae_noShuffle_beta-03",
     [300, 100, 50, 25],
     sl=0.01,
@@ -74,7 +87,7 @@ botKNN = TradingBotKNN(
 )
 
 sl = 0.01
-tp = 0.01
+tp = 0.02
 
 candles = getCandles("./marketData/XRPUSDT-5m-2024")
 # candles = candles[:50000]
