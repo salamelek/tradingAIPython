@@ -12,3 +12,6 @@ def backtest_strategy(data: pd.DataFrame) -> None:
     if not required_cols.issubset(data.columns):
         raise Exception(f"The given data does not contain some required columns:\nGiven:    {set(data.columns)}\nRequired: {required_cols}")
 
+
+def backtest_in_sample_permutation(data: pd.DataFrame) -> None:
+    pass

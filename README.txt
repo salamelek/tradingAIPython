@@ -269,7 +269,7 @@ How to truly backtest:
 	
 	1) In-sample excellence:
 		We first have to create the stratregy's signal AT EACH BAR: -1 sell, 0 hold, 1 buy
-			I'm guessing that i could use non integer values in case of different tp/sl or position
+			I'm guessing that I could use non integer values in case of different tp/sl or position
 			sizes. Then we compute the strategy's return (close to close) FOR EACH BAR. With these granular results we
 			can then really get a nicer approximation of the results. This is usually done by checking
 			the profits at each trade, but doing it this way brings up much more information.
@@ -331,7 +331,7 @@ How to truly backtest:
 		
 	4) Walk forward permutation test
 		Just to make sure of the results, we can permutate the validation data.
-		Our algo should outperform the vast amjority of the permutations of the validation data.
+		Our algo should outperform the vast majority of the permutations of the validation data.
 		The difference in strategies will be much smaller than before, since this is data that has not
 		been optimised on. Of course, the better it outperforms the permutations, the best the strategy is.
 		

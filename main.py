@@ -1,3 +1,10 @@
+"""
+1) Create a strategy S in strategies.py
+2) Optimise its parameters using training data D1
+3) 
+"""
+
+
 from strategies import *
 from dataGetter import *
 from visualizer import *
