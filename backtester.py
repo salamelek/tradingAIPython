@@ -1,17 +1,29 @@
+"""
+All the necessary functions to fully backtest a strategy
+"""
+
 import pandas as pd
+from strategies import Strategy
+from performanceMetrics import PerformanceMetric
 
 
-def backtest_strategy(data: pd.DataFrame) -> None:
+def optimise_strategy(P: PerformanceMetric, S: type[Strategy], D: pd.DataFrame) -> (list[int], float):
     """
-    Computes the positions taken by the strategy
+    Takes a strategy and some candles.
+    Optimises the strategy's parameters to yield the best performance.
     """
 
-    # check that the data has ohlc data + strategy_signal
-    required_cols = {"Open", "High", "Low", "Close", "strategy_signal"}
+    # TODO look into "optuna" library (ideal for these types of optimisations)
 
-    if not required_cols.issubset(data.columns):
-        raise Exception(f"The given data does not contain some required columns:\nGiven:    {set(data.columns)}\nRequired: {required_cols}")
+    return [], 0
 
 
-def backtest_in_sample_permutation(data: pd.DataFrame) -> None:
-    pass
+def create_permutation(candles: pd.DataFrame) -> pd.DataFrame:
+    """
+    Takes some candles and permutates them
+    """
+
+    return candles
+
+
+

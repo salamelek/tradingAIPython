@@ -57,5 +57,14 @@ def getCandles(folderName: str) -> pd.DataFrame:
     return data
 
 
+def getCandlesFromFolders(folders: list) -> pd.DataFrame:
+    dataFrames = []
+
+    for folder in folders:
+        dataFrames.append(getCandles(folder))
+
+    return pd.concat(dataFrames, ignore_index=True)
+
+
 def getNormCandles(folderName: str) -> pd.DataFrame:
     return normaliseCandles(getCandles(folderName))
