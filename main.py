@@ -26,6 +26,8 @@ from dataGetter import *
 from backtester import *
 from performanceMetrics import *
 
+from rich.progress import track
+
 
 # Get the train and validation candles
 D1 = getCandlesFromFolders([
@@ -42,12 +44,12 @@ D2 = getCandles(
 
 # Choose a strategy and a performance metric
 S = SMACrossoverStrategy
-P = PnlMetric()
+P = PFMetric()
 
 
 # Optimise the strategy S on D1
 params, p1 = optimise_strategy(P, S, D1)
-print(f"The best performance achieved is {p1} with the parameters {params}")
+print(f"The best {P.name} achieved is {p1} with the parameters {params}")
 
 # Create the optimised strategy So
 So = SMACrossoverStrategy(*params)
@@ -58,7 +60,7 @@ n1 = 1000
 performances1 = np.empty(n1, dtype=np.float64)
 
 # Create permutations of D1 and evaluate them
-for i in range(n1):
+for i in track(range(n1), description="Permuting D1"):
     D1i = create_permutation(D1)
     # TODO check if this step is correct (do we have to optimise every time?)
     _, p = optimise_strategy(P, S, D1i)
@@ -79,7 +81,7 @@ print(f"The performance for the validation dataset is {p2}")
 n2 = 1000
 performances2 = np.empty(n2, dtype=np.float64)
 
-for i in range(n2):
+for i in track(range(n2), description="Permuting D2"):
     D2i = create_permutation(D2)
     performances2[i] = P(So, D2i)
 
