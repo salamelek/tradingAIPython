@@ -17,8 +17,6 @@
     Now the performance ratio pr is expected to be higher, but as before, we should aim at something at the very least
     below 0.5 and lower is better.
 6) If we are satisfied with all the above criteria, we can proceed with trading :>
-
-TODO I'm not really sure how many times and where do I have to optimise the strategy...
 """
 
 from strategies import *
@@ -62,9 +60,7 @@ performances1 = np.empty(n1, dtype=np.float64)
 # Create permutations of D1 and evaluate them
 for i in track(range(n1), description="Permuting D1"):
     D1i = create_permutation(D1)
-    # TODO check if this step is correct (do we have to optimise every time?)
-    _, p = optimise_strategy(P, S, D1i)
-    performances1[i] = p
+    performances1[i] = P(So, D1i)
 
 # Check the performance ratio
 pr1 = np.sum(performances1 > p1) / n1
@@ -72,7 +68,6 @@ print(f"Performance ratio of test data with n={n1} is {pr1}")
 
 
 # Test on validation data
-# TODO check if this step is correct
 p2 = P(So, D2)
 print(f"The performance for the validation dataset is {p2}")
 

@@ -2,21 +2,41 @@
 All the necessary functions to fully backtest a strategy
 """
 
+import optuna
 import numpy as np
 import pandas as pd
 from strategies import Strategy
 from performanceMetrics import PerformanceMetric
 
 
-def optimise_strategy(P: PerformanceMetric, S: type[Strategy], D: pd.DataFrame) -> (list[int], float):
+def optimise_strategy(P: PerformanceMetric, S: type[Strategy], D: pd.DataFrame, n_trials: int = 50) -> (dict, float):
     """
     Takes a strategy and some candles.
     Optimises the strategy's parameters to yield the best performance.
+    Uses the optuna library to find the best parameters.
     """
 
-    # TODO look into "optuna" library (ideal for these types of optimisations)
+    def objective(trial):
+        params = {}
+        for p in S.parameter_space:
+            if p["type"] == "int":
+                params[p["name"]] = trial.suggest_int(p["name"], p["low"], p["high"])
+            elif p["type"] == "float":
+                params[p["name"]] = trial.suggest_float(p["name"], p["low"], p["high"])
+            elif p["type"] == "bool":
+                params[p["name"]] = trial.suggest_bool(p["name"], p["low"], p["high"])
+            else:
+                raise Exception(f"Unknown parameter type: {p['type']}")
 
-    return [], 0
+        strategy = S(**params)
+        performance = P(strategy, D)
+        return performance
+
+    study = optuna.create_study(direction=P.direction)
+    optuna.logging.set_verbosity(optuna.logging.WARNING)
+    study.optimize(objective, n_trials=n_trials)
+
+    return study.best_params, study.best_value
 
 
 def create_permutation(candles: pd.DataFrame, seed=None) -> pd.DataFrame:
