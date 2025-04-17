@@ -54,6 +54,12 @@ def getCandles(folderName: str) -> pd.DataFrame:
         'volume': 'Volume'
     })[['Open', 'High', 'Low', 'Close', 'Volume']]
 
+    # Compute the log returns for each candle
+    data["log_candle_returns"] = np.log(data["Close"]).diff()
+
+    # Drop the NaN rows
+    data.dropna(inplace=True)
+
     return data
 
 
