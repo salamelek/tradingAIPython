@@ -12,7 +12,7 @@ from performanceMetrics import PerformanceMetric
 def optimise_strategy(P: PerformanceMetric, S: type[Strategy], D: pd.DataFrame, n_trials: int = 50) -> (dict, float):
     """
     Takes a strategy and some candles.
-    Optimises the strategy's parameters to yield the best performance.
+    Optimizes the strategy's parameters to yield the best performance.
     Uses the optuna library to find the best parameters.
     """
 
@@ -95,8 +95,16 @@ def create_permutation(candles: pd.DataFrame, seed=None) -> pd.DataFrame:
     # Combine all components
     perm_bars = np.column_stack((open_vals, high_vals, low_vals, closes))
 
-    return pd.DataFrame(
+    permuted_candles = pd.DataFrame(
         np.exp(perm_bars, dtype=np.float32),
         index=candles.index,
         columns=["Open", "High", "Low", "Close"]
     )
+
+    # Compute the log returns for each candle
+    permuted_candles["log_candle_returns"] = np.log(permuted_candles["Close"]).diff()
+
+    # Drop the NaN rows
+    permuted_candles.dropna(inplace=True)
+
+    return permuted_candles

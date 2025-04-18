@@ -1,7 +1,9 @@
 """
 The definitions of the strategies
+The run() function of the strategies will calculate the strategy signals
 """
 
+import numpy as np
 import pandas as pd
 
 
@@ -16,7 +18,10 @@ class Strategy:
         if not len(self.parameter_space):
             raise Exception("No parameters defined!")
 
-    def run(self, data: pd.DataFrame) -> float:
+    def generate_signals(self, data: pd.DataFrame) -> None:
+        """
+        Generate the strategy signals and put them in the data frame
+        """
         raise NotImplementedError("All subclasses must implement this!")
 
 
@@ -31,5 +36,18 @@ class SMACrossoverStrategy(Strategy):
         self.fastSMA = fastSMA
         self.slowSMA = slowSMA
 
-    def run(self, data: pd.DataFrame) -> float:
-        pass
+    def generate_signals(self, data: pd.DataFrame) -> None:
+        close = data["Close"]
+        sma1 = close.rolling(window=self.fastSMA).mean()
+        sma2 = close.rolling(window=self.slowSMA).mean()
+
+        cross_above = (sma1 > sma2) & (sma1.shift(1) <= sma2.shift(1))
+        cross_below = (sma1 < sma2) & (sma1.shift(1) >= sma2.shift(1))
+
+        signal = np.select(
+            [cross_above, cross_below],
+            [1, -1],
+            default=0
+        )
+
+        data["strategy_signal"] = signal

@@ -1,7 +1,7 @@
 """
 1) Create a strategy S in strategies.py
 2) Optimise its parameters using training data
-    In other words, we want to find the maximum of P(S(params), D1) -> So, p0
+    In other words; we want to find the maximum of P(S(params), D1) -> So, p0
     P in this case is the performance function, that calculates the return or any other metric
     modifying the strategy parameters (probably using gradient descent or something like tha).
     p0 is the best performance achieved.
@@ -9,7 +9,7 @@
     Note that n should be at the very least 100. We will denote the permutations of D1 as D1I.
     Once we have a list of performances for every permutation [P(S, D1i)], we can count how many of them
     are greater than the performance on D1. So count([P(S, D1i)] > P(So, D1)) = m. Now calculating the performance
-    ratio pr = m / n, we have to aim at a pr < 0.01. Lower is of course better.
+    ratio pr = m / n, we have to aim at a pr < 0.01. Lower is, of course, better.
 4) Now that our strategy So outperforms random permutations of D1, we can test it on some validation data D2.
     The performance P(So, D2) is expected to be lower than P(So, D1), so we have to decide if it's worth trading.
 5) If we decide that the strategy is still good, we can run it on some permutations of D2.
@@ -46,11 +46,11 @@ P = PFMetric()
 
 
 # Optimise the strategy S on D1
-params, p1 = optimise_strategy(P, S, D1)
+params, p1 = optimise_strategy(P, S, D1, n_trials=100)
 print(f"The best {P.name} achieved is {p1} with the parameters {params}")
 
 # Create the optimised strategy So
-So = SMACrossoverStrategy(*params)
+So = SMACrossoverStrategy(**params)
 
 
 # Check the performance of So on DI
@@ -64,7 +64,7 @@ for i in track(range(n1), description="Permuting D1"):
 
 # Check the performance ratio
 pr1 = np.sum(performances1 > p1) / n1
-print(f"Performance ratio of test data with n={n1} is {pr1}")
+print(f"P-value of test data with n={n1} is {pr1}")
 
 
 # Test on validation data
@@ -82,4 +82,4 @@ for i in track(range(n2), description="Permuting D2"):
 
 # Performance ratio
 pr2 = np.sum(performances2 > p2) / n2
-print(f"Performance ratio of validation data with n={n2} is {pr2}")
+print(f"P-value of validation data with n={n2} is {pr2}")

@@ -14,9 +14,9 @@ Thus, it needs to:
     4) Compute the performance
 
 Since the return on each candle can be re-used, it should be calculated elsewhere, since this function will be
-called an innumerable amount of times.
+called an innumerable number of times.
 """
-
+import numpy as np
 import pandas as pd
 from strategies import Strategy
 
@@ -44,7 +44,18 @@ class PFMetric(PerformanceMetric):
         super().__init__("Profit Factor")
 
     def _evaluate(self, S: Strategy, D: pd.DataFrame) -> float:
-        return 0
+        S.generate_signals(D)
+
+        D["strategy_return"] = D["log_candle_returns"] * D["strategy_signal"].shift(1)
+        returns = D["strategy_return"].dropna()
+
+        denominator = returns[returns < 0].abs().sum()
+        if denominator == 0:
+            return 0
+
+        pf = returns[returns > 0].sum() / denominator
+
+        return pf
 
 
 class SharpeMetric(PerformanceMetric):
