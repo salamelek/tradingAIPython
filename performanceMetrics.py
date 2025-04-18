@@ -16,7 +16,7 @@ Thus, it needs to:
 Since the return on each candle can be re-used, it should be calculated elsewhere, since this function will be
 called an innumerable number of times.
 """
-import numpy as np
+
 import pandas as pd
 from strategies import Strategy
 
@@ -63,7 +63,25 @@ class SharpeMetric(PerformanceMetric):
         super().__init__("Sharpe Ratio")
 
     def _evaluate(self, S: Strategy, D: pd.DataFrame) -> float:
-        return 0
+        S.generate_signals(D)
+
+        D["strategy_return"] = D["log_candle_returns"] * D["strategy_signal"].shift(1)
+        returns = D["strategy_return"].dropna()
+
+        if returns.empty:
+            return 0.0
+
+        annualization_factor = 365 * 24 * 12
+
+        mean_return = returns.mean()
+        std_return = returns.std()
+
+        if std_return == 0:
+            return 0.0
+
+        sharpe_ratio = (mean_return / std_return) * (annualization_factor ** 0.5)
+
+        return sharpe_ratio
 
 
 class PnlMetric(PerformanceMetric):

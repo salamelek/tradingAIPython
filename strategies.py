@@ -28,7 +28,7 @@ class Strategy:
 class SMACrossoverStrategy(Strategy):
     parameter_space = [
         {"name": "fastSMA", "type": "int", "low": 5, "high": 50},
-        {"name": "slowSMA", "type": "int", "low": 10, "high": 200}
+        {"name": "slowSMA", "type": "int", "low": 10, "high": 100}
     ]
 
     def __init__(self, fastSMA: int = 5, slowSMA: int = 10):

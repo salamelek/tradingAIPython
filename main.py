@@ -69,7 +69,7 @@ print(f"P-value of test data with n={n1} is {pr1}")
 
 # Test on validation data
 p2 = P(So, D2)
-print(f"The performance for the validation dataset is {p2}")
+print(f"The {P.name} for the validation dataset is {p2}")
 
 
 # Permutate the validation data
