@@ -7,6 +7,7 @@ import faiss
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import RobustScaler
+from numpy.lib.stride_tricks import sliding_window_view
 
 
 class Strategy:
@@ -61,17 +62,33 @@ class KnnIndicatorsStrategy(Strategy):
         {"name": "sma_window", "type": "int", "low": 5, "high": 100},
         {"name": "atr_window", "type": "int", "low": 5, "high": 30},
         {"name": "rsi_window", "type": "int", "low": 5, "high": 30},
+        {"name": "max_pos_len", "type": "int", "low": 5, "high": 500},
     ]
 
-    def __init__(self, index: faiss.IndexFlatL2, k: int = 1, sma_window: int = 5, atr_window: int = 5, rsi_window: int = 5):
+    def __init__(
+            self,
+            index: faiss.IndexFlatL2,
+            k: int = 1,
+            sma_window: int = 5,
+            atr_window: int = 5,
+            rsi_window: int = 5,
+            max_pos_len: int = 24,
+            tp: float = 0.01,
+            sl: float = 0.01,
+    ):
         super().__init__()
         self.index = index
         self.k = k
         self.sma_window = sma_window
         self.atr_window = atr_window
         self.rsi_window = rsi_window
+        self.max_pos_len = max_pos_len
+        self.take_profit = tp
+        self.stop_loss = sl
 
     def get_norm_indicators(self, data: pd.DataFrame) -> np.ndarray:
+        # TODO since the faiss index is trained on normalized data, I should modify this function or class
+        #   to be able to run this function BEFORE creating the faiss index
         close = data["Close"]
         high = data["High"]
         low = data["Low"]
@@ -126,6 +143,41 @@ class KnnIndicatorsStrategy(Strategy):
             5) profit
         """
 
-        distances, indices = self.index.search(self.get_norm_indicators(data), self.k)
+        # find the neighbours
+        indicators = self.get_norm_indicators(data)
+        distances, indices = self.index.search(indicators, self.k)
 
+        # Entry prices
+        close = data["Close"].to_numpy()
+        entry_prices = close[indices]
 
+        # Future price window
+        price_windows = sliding_window_view(close, window_shape=self.max_pos_len)
+
+        # Clip indices to avoid going out of bounds
+        valid_max_index = price_windows.shape[0] - 1
+        clipped_indices = np.minimum(indices, valid_max_index)
+
+        # Price windows for all neighbours
+        neighbor_windows = price_windows[clipped_indices]
+
+        # Relative returns
+        relative_returns = (neighbor_windows - entry_prices[..., None]) / entry_prices[..., None]
+
+        tp_hit = relative_returns >= self.take_profit
+        sl_hit = relative_returns <= -self.stop_loss
+
+        tp_idx = np.argmax(tp_hit, axis=2)
+        sl_idx = np.argmax(sl_hit, axis=2)
+
+        tp_valid = tp_hit.any(axis=2)
+        sl_valid = sl_hit.any(axis=2)
+
+        tp_time = np.where(tp_valid, tp_idx, self.max_pos_len + 1)
+        sl_time = np.where(sl_valid, sl_idx, self.max_pos_len + 1)
+
+        result = np.zeros_like(tp_time, dtype=np.int8)
+        result[(tp_time < sl_time) & (tp_time <= self.max_pos_len)] = 1
+        result[(sl_time < tp_time) & (sl_time <= self.max_pos_len)] = -1
+
+        data["strategy_signal"] = result

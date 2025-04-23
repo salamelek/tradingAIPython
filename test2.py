@@ -1,11 +1,19 @@
 import faiss
 import numpy as np
 
-# Training data
-X_train = np.random.rand(1000, 32).astype("float32")
+from dataGetter import *
 
-# Query points
-X_query = np.random.rand(10, 32).astype("float32")
+
+faiss_train_data = getCandlesFromFolders([
+    "./marketData/ETHUSDT-5m-2020",
+    "./marketData/ETHUSDT-5m-2021",
+    "./marketData/ETHUSDT-5m-2022",
+    "./marketData/ETHUSDT-5m-2023",
+])
+
+test_data = getCandles("./marketData/ETHUSDT-5m-2024")
+
+
 
 # Create index
 index = faiss.IndexFlatL2(32)  # 32 = dimension, L2 = Euclidean

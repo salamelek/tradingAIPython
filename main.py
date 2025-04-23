@@ -39,6 +39,15 @@ D2 = getCandles(
     "./marketData/BTCUSDT-5m-2024"
 )
 
+# Train data for the faiss index
+faiss_train_data = getCandlesFromFolders([
+    "./marketData/ETHUSDT-5m-2020",
+    "./marketData/ETHUSDT-5m-2021",
+    "./marketData/ETHUSDT-5m-2022",
+    "./marketData/ETHUSDT-5m-2023",
+    "./marketData/ETHUSDT-5m-2024",
+])
+
 
 # Choose a strategy and a performance metric
 S = SMACrossoverStrategy
