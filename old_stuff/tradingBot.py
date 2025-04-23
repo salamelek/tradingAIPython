@@ -1,6 +1,8 @@
 import faiss
 import bisect
 
+import torch
+
 from dataGetter import *
 from autoencoder import *
 from positionSim import *

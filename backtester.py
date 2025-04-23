@@ -12,7 +12,7 @@ from performanceMetrics import PerformanceMetric
 def optimise_strategy(P: PerformanceMetric, S: type[Strategy], D: pd.DataFrame, n_trials: int = 50) -> (dict, float):
     """
     Takes a strategy and some candles.
-    Optimizes the strategy's parameters to yield the best performance.
+    Optimises the strategy's parameters to yield the best performance.
     Uses the optuna library to find the best parameters.
     """
 
@@ -30,11 +30,16 @@ def optimise_strategy(P: PerformanceMetric, S: type[Strategy], D: pd.DataFrame, 
 
         strategy = S(**params)
         performance = P(strategy, D)
+
+        print(f"\rOptimising strategy: {trial.number + 1}/{n_trials}", end="")
+
         return performance
 
     study = optuna.create_study(direction=P.direction)
     optuna.logging.set_verbosity(optuna.logging.WARNING)
     study.optimize(objective, n_trials=n_trials)
+
+    print()
 
     return study.best_params, study.best_value
 
