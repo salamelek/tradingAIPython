@@ -5,7 +5,7 @@ from performanceMetrics import *
 
 from rich.progress import track
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D  # Needed for 3D plotting
+from mpl_toolkits.mplot3d import Axes3D
 
 
 def plot_indicator_scatter(indicators: np.ndarray):

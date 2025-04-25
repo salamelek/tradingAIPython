@@ -58,7 +58,7 @@ class SMACrossoverStrategy(Strategy):
 
 class KnnIndicatorsStrategy(Strategy):
     parameter_space = [
-        {"name": "k", "type": "int", "low": 1, "high": 5},
+        # {"name": "k", "type": "int", "low": 1, "high": 5},    # The problem here is that we have to create a new index every time
         {"name": "sma_window", "type": "int", "low": 5, "high": 100},
         {"name": "atr_window", "type": "int", "low": 5, "high": 30},
         {"name": "rsi_window", "type": "int", "low": 5, "high": 30},
@@ -67,14 +67,15 @@ class KnnIndicatorsStrategy(Strategy):
 
     def __init__(
             self,
-            index: faiss.IndexFlatL2,
-            k: int = 1,
+            k: int = 3,
             sma_window: int = 5,
             atr_window: int = 5,
             rsi_window: int = 5,
-            max_pos_len: int = 24,
+            max_pos_len: int = 24 * 12,
             tp: float = 0.01,
             sl: float = 0.01,
+            index: faiss.IndexFlatL2 = None,
+            faiss_data: pd.DataFrame = None,
     ):
         super().__init__()
         self.index = index
@@ -85,10 +86,9 @@ class KnnIndicatorsStrategy(Strategy):
         self.max_pos_len = max_pos_len
         self.take_profit = tp
         self.stop_loss = sl
+        self.faiss_data = faiss_data
 
     def get_norm_indicators(self, data: pd.DataFrame) -> np.ndarray:
-        # TODO since the faiss index is trained on normalized data, I should modify this function or class
-        #   to be able to run this function BEFORE creating the faiss index
         close = data["Close"]
         high = data["High"]
         low = data["Low"]
@@ -143,12 +143,18 @@ class KnnIndicatorsStrategy(Strategy):
             5) profit
         """
 
+        if self.index is None:
+            raise Exception("The faiss index must be set!")
+
+        if self.faiss_data is None:
+            raise Exception("The faiss data must be set!")
+
         # find the neighbours
         indicators = self.get_norm_indicators(data)
         distances, indices = self.index.search(indicators, self.k)
 
         # Entry prices
-        close = data["Close"].to_numpy()
+        close = self.faiss_data["Close"].to_numpy()
         entry_prices = close[indices]
 
         # Future price window
@@ -180,4 +186,14 @@ class KnnIndicatorsStrategy(Strategy):
         result[(tp_time < sl_time) & (tp_time <= self.max_pos_len)] = 1
         result[(sl_time < tp_time) & (sl_time <= self.max_pos_len)] = -1
 
-        data["strategy_signal"] = result
+        padded_result = np.zeros((len(data), self.k), dtype=np.int8)
+        padded_result[:result.shape[0]] = result
+
+        long = np.all(padded_result == 1, axis=1)
+        short = np.all(padded_result == -1, axis=1)
+
+        final_signals = np.zeros(len(padded_result), dtype=np.int8)
+        final_signals[long] = 1
+        final_signals[short] = -1
+
+        data["strategy_signal"] = final_signals

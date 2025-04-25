@@ -29,9 +29,9 @@ from rich.progress import track
 
 # Get the train and validation candles
 D1 = getCandlesFromFolders([
-    "./marketData/BTCUSDT-5m-2020",
-    "./marketData/BTCUSDT-5m-2021",
-    "./marketData/BTCUSDT-5m-2022",
+    # "./marketData/BTCUSDT-5m-2020",
+    # "./marketData/BTCUSDT-5m-2021",
+    # "./marketData/BTCUSDT-5m-2022",
     "./marketData/BTCUSDT-5m-2023",
 ])
 
@@ -41,30 +41,46 @@ D2 = getCandles(
 
 # Train data for the faiss index
 faiss_train_data = getCandlesFromFolders([
-    "./marketData/ETHUSDT-5m-2020",
-    "./marketData/ETHUSDT-5m-2021",
-    "./marketData/ETHUSDT-5m-2022",
-    "./marketData/ETHUSDT-5m-2023",
+    # "./marketData/ETHUSDT-5m-2020",
+    # "./marketData/ETHUSDT-5m-2021",
+    # "./marketData/ETHUSDT-5m-2022",
+    # "./marketData/ETHUSDT-5m-2023",
     "./marketData/ETHUSDT-5m-2024",
 ])
 
 
 # Choose a strategy and a performance metric
-S = SMACrossoverStrategy
+S = KnnIndicatorsStrategy
 P = PFMetric()
 
 
+# create the faiss index
+tmp_s = S()
+index = faiss.IndexFlatL2(tmp_s.k)
+index.add(tmp_s.get_norm_indicators(faiss_train_data))
+
+
+# define default strategy params
+default_params = {
+    "index": index,
+    "faiss_data": faiss_train_data,
+}
+
+
 # Optimise the strategy S on D1
-params, p1 = optimise_strategy(P, S, D1, n_trials=100)
+# params, p1 = optimise_strategy(P, S, D1, n_trials=100, **default_params)
+params, p1 = {"sma_window": 5, "atr_window": 15, "rsi_window": 15, "max_pos_len": 57}, 1.7239907243622206
 print(f"The best {P.name} achieved is {p1} with the parameters {params}")
 
+
 # Create the optimised strategy So
-So = SMACrossoverStrategy(**params)
+So = S(**params, **default_params)
 
 
 # Check the performance of So on DI
-n1 = 1000
+n1 = 1
 performances1 = np.empty(n1, dtype=np.float64)
+
 
 # Create permutations of D1 and evaluate them
 for i in track(range(n1), description="Permuting D1"):
@@ -73,7 +89,11 @@ for i in track(range(n1), description="Permuting D1"):
 
 # Check the performance ratio
 pr1 = np.sum(performances1 > p1) / n1
-print(f"P-value of test data with n={n1} is {pr1}")
+print(f"P-value of test data with n={n1} is {pr1} ({np.sum(performances1 > p1)} / n1)")
+print(f"The performances were: {performances1}")
+
+
+input("Press enter to continue [THIS WILL TEST THE STRATEGY ON THE VALIDATION DATA]")
 
 
 # Test on validation data
@@ -82,7 +102,7 @@ print(f"The {P.name} for the validation dataset is {p2}")
 
 
 # Permutate the validation data
-n2 = 1000
+n2 = 1
 performances2 = np.empty(n2, dtype=np.float64)
 
 for i in track(range(n2), description="Permuting D2"):

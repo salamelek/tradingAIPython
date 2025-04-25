@@ -2,6 +2,7 @@
 All the necessary functions to fully backtest a strategy
 """
 
+import faiss
 import optuna
 import numpy as np
 import pandas as pd
@@ -9,7 +10,7 @@ from strategies import Strategy
 from performanceMetrics import PerformanceMetric
 
 
-def optimise_strategy(P: PerformanceMetric, S: type[Strategy], D: pd.DataFrame, n_trials: int = 50) -> (dict, float):
+def optimise_strategy(P: PerformanceMetric, S: type[Strategy], D: pd.DataFrame, n_trials: int = 50, **default_params) -> (dict, float):
     """
     Takes a strategy and some candles.
     Optimises the strategy's parameters to yield the best performance.
@@ -28,18 +29,18 @@ def optimise_strategy(P: PerformanceMetric, S: type[Strategy], D: pd.DataFrame, 
             else:
                 raise Exception(f"Unknown parameter type: {p['type']}")
 
-        strategy = S(**params)
+        strategy = S(**params, **default_params)
         performance = P(strategy, D)
 
-        print(f"\rOptimising strategy: {trial.number + 1}/{n_trials}", end="")
+        # print(f"\rOptimising strategy: {trial.number + 1}/{n_trials}", end="")
 
         return performance
 
     study = optuna.create_study(direction=P.direction)
-    optuna.logging.set_verbosity(optuna.logging.WARNING)
+    # optuna.logging.set_verbosity(optuna.logging.WARNING)
     study.optimize(objective, n_trials=n_trials)
 
-    print()
+    # print()
 
     return study.best_params, study.best_value
 
