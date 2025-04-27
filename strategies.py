@@ -88,15 +88,12 @@ class KnnIndicatorsStrategy(Strategy):
         self.stop_loss = sl
         self.faiss_data = faiss_data
 
-    def get_norm_indicators(self, data: pd.DataFrame) -> np.ndarray:
+    def get_norm_indicators(self, data: pd.DataFrame) -> tuple[np.ndarray, pd.DataFrame]:
         close = data["Close"]
         high = data["High"]
         low = data["Low"]
 
-        # sma
         sma = close.rolling(window=self.sma_window).mean()
-
-        # atr
         prev_close = close.shift(1)
         tr = pd.concat([
             high - low,
@@ -105,30 +102,31 @@ class KnnIndicatorsStrategy(Strategy):
         ], axis=1).max(axis=1)
         atr = tr.rolling(window=self.atr_window).mean()
 
-        # rsi
         delta = close.diff()
         gain = delta.clip(lower=0)
         loss = -delta.clip(upper=0)
-
         avg_gain = gain.rolling(window=self.rsi_window).mean()
         avg_loss = loss.rolling(window=self.rsi_window).mean()
-
         rs = avg_gain / avg_loss
         rsi = 100 - (100 / (1 + rs))
 
-        # Stack the features into a NumPy array
-        indicators = np.stack([sma, atr, rsi], axis=1)
-        indicators = indicators[~np.isnan(indicators).any(axis=1)]
+        data = data.copy()
+        data["sma"] = sma
+        data["atr"] = atr
+        data["rsi"] = rsi
 
-        # Remove outliers
-        q_high = np.quantile(indicators[:, 1], 0.99)  # 99th percentile of ATR
-        indicators[:, 1] = np.clip(indicators[:, 1], None, q_high)  # Clip upper outliers
+        data_clean = data.dropna()
+        indicators = data_clean[["sma", "atr", "rsi"]].to_numpy()
 
-        # Normalise using RobustScaler
+        # Clip ATR outliers (99th percentile)
+        q_high = np.quantile(indicators[:, 1], 0.99)
+        indicators[:, 1] = np.clip(indicators[:, 1], None, q_high)
+
+        # Normalize with RobustScaler
         scaler = RobustScaler()
         indicators_scaled = scaler.fit_transform(indicators)
 
-        return indicators_scaled
+        return indicators_scaled, data_clean
 
     def generate_signals(self, data: pd.DataFrame) -> None:
         """
@@ -150,7 +148,7 @@ class KnnIndicatorsStrategy(Strategy):
             raise Exception("The faiss data must be set!")
 
         # find the neighbours
-        indicators = self.get_norm_indicators(data)
+        indicators, data = self.get_norm_indicators(data)
         distances, indices = self.index.search(indicators, self.k)
 
         # Entry prices

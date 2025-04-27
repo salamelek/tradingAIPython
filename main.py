@@ -28,10 +28,8 @@ from rich.progress import track
 
 
 # Get the train and validation candles
+# DURING TESTING, DON'T PUT SAME YEARS OF DATA IN THE TRAIN AND TRAIN_FAISS, SINCE THERE IS SOME CLEAR CORELATION
 D1 = getCandlesFromFolders([
-    # "./marketData/BTCUSDT-5m-2020",
-    # "./marketData/BTCUSDT-5m-2021",
-    # "./marketData/BTCUSDT-5m-2022",
     "./marketData/BTCUSDT-5m-2023",
 ])
 
@@ -43,9 +41,7 @@ D2 = getCandles(
 faiss_train_data = getCandlesFromFolders([
     # "./marketData/ETHUSDT-5m-2020",
     # "./marketData/ETHUSDT-5m-2021",
-    # "./marketData/ETHUSDT-5m-2022",
-    # "./marketData/ETHUSDT-5m-2023",
-    "./marketData/ETHUSDT-5m-2024",
+    "./marketData/ETHUSDT-5m-2022",
 ])
 
 
@@ -57,7 +53,8 @@ P = PFMetric()
 # create the faiss index
 tmp_s = S()
 index = faiss.IndexFlatL2(tmp_s.k)
-index.add(tmp_s.get_norm_indicators(faiss_train_data))
+norm_indicators, faiss_train_data = tmp_s.get_norm_indicators(faiss_train_data)
+index.add(norm_indicators)
 
 
 # define default strategy params

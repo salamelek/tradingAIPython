@@ -1,4 +1,15 @@
-a = {"a": 1, "b": 2}
-b = {"c": 3}
+from strategies import *
+from dataGetter import *
 
-print()
+
+S = KnnIndicatorsStrategy()
+
+D = getCandles(
+    "./marketData/BTCUSDT-5m-2024"
+)
+
+ind, D = S.get_norm_indicators(D)
+
+print(D)
+print(ind)
+print(ind.shape)
