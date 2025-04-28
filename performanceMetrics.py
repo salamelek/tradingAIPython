@@ -44,7 +44,7 @@ class PFMetric(PerformanceMetric):
         super().__init__("Profit Factor")
 
     def _evaluate(self, S: Strategy, D: pd.DataFrame) -> float:
-        S.generate_signals(D)
+        D = S.generate_signals(D)
 
         D["strategy_return"] = D["log_candle_returns"] * D["strategy_signal"].shift(1)
         returns = D["strategy_return"].dropna()
@@ -63,7 +63,7 @@ class SharpeMetric(PerformanceMetric):
         super().__init__("Sharpe Ratio")
 
     def _evaluate(self, S: Strategy, D: pd.DataFrame) -> float:
-        S.generate_signals(D)
+        D = S.generate_signals(D)
 
         D["strategy_return"] = D["log_candle_returns"] * D["strategy_signal"].shift(1)
         returns = D["strategy_return"].dropna()

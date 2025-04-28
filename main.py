@@ -64,8 +64,8 @@ default_params = {
 
 
 # Optimise the strategy S on D1
-# params, p1 = optimise_strategy(P, S, D1, n_trials=100, **default_params)
-params, p1 = {"sma_window": 5, "atr_window": 15, "rsi_window": 15, "max_pos_len": 57}, 1.7239907243622206
+params, p1 = optimise_strategy(P, S, D1, n_trials=100, **default_params)
+# params, p1 = {'sma_window': 25, 'atr_window': 11, 'rsi_window': 24, 'max_pos_len': 11}, 1.106794342284943
 print(f"The best {P.name} achieved is {p1} with the parameters {params}")
 
 
@@ -74,12 +74,13 @@ So = S(**params, **default_params)
 
 
 # Check the performance of So on DI
-n1 = 1
+n1 = 10
 performances1 = np.empty(n1, dtype=np.float64)
 
 
 # Create permutations of D1 and evaluate them
 for i in track(range(n1), description="Permuting D1"):
+    print(f"\r{i} / {n1}", end="")
     D1i = create_permutation(D1)
     performances1[i] = P(So, D1i)
 
@@ -98,7 +99,7 @@ print(f"The {P.name} for the validation dataset is {p2}")
 
 
 # Permutate the validation data
-n2 = 1
+n2 = 10
 performances2 = np.empty(n2, dtype=np.float64)
 
 for i in track(range(n2), description="Permuting D2"):

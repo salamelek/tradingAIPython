@@ -21,7 +21,7 @@ class Strategy:
         self.args = args
         self.kwargs = kwargs
 
-    def generate_signals(self, data: pd.DataFrame) -> None:
+    def generate_signals(self, data: pd.DataFrame) -> pd.DataFrame:
         """
         Generate the strategy signals and put them in the data frame
         """
@@ -128,7 +128,7 @@ class KnnIndicatorsStrategy(Strategy):
 
         return indicators_scaled, data_clean
 
-    def generate_signals(self, data: pd.DataFrame) -> None:
+    def generate_signals(self, data: pd.DataFrame) -> pd.DataFrame:
         """
         This function will generate the strategy signals using a faiss index
         The index has to be trained beforehand. AVOID DATA LEAKAGE AT ALL COSTS
@@ -197,3 +197,5 @@ class KnnIndicatorsStrategy(Strategy):
         final_signals[short] = -1
 
         data["strategy_signal"] = final_signals
+
+        return data
