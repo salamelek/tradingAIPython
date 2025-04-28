@@ -149,6 +149,8 @@ class KnnIndicatorsStrategy(Strategy):
 
         # find the neighbours
         indicators, data = self.get_norm_indicators(data)
+        
+        # TODO get the real and distinct neighbours, these ones are all together
         distances, indices = self.index.search(indicators, self.k)
 
         # Entry prices

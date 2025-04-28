@@ -29,6 +29,12 @@ from rich.progress import track
 
 # Get the train and validation candles
 # DURING TESTING, DON'T PUT SAME YEARS OF DATA IN THE TRAIN AND TRAIN_FAISS, SINCE THERE IS SOME CLEAR CORELATION
+faiss_train_data = getCandlesFromFolders([
+    # "./marketData/ETHUSDT-5m-2020",
+    # "./marketData/ETHUSDT-5m-2021",
+    "./marketData/ETHUSDT-5m-2022",
+])
+
 D1 = getCandlesFromFolders([
     "./marketData/BTCUSDT-5m-2023",
 ])
@@ -36,13 +42,6 @@ D1 = getCandlesFromFolders([
 D2 = getCandles(
     "./marketData/BTCUSDT-5m-2024"
 )
-
-# Train data for the faiss index
-faiss_train_data = getCandlesFromFolders([
-    # "./marketData/ETHUSDT-5m-2020",
-    # "./marketData/ETHUSDT-5m-2021",
-    "./marketData/ETHUSDT-5m-2022",
-])
 
 
 # Choose a strategy and a performance metric
