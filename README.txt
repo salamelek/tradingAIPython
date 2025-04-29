@@ -344,3 +344,12 @@ Books to read:
 	- Systematic trading - Robert Carver
 	- Permutation and randomization tests for trading system development algorythms in C++ - Timothy Masters
 	- Testing and Tuning Market Trading Systems - Timothy Masters
+
+
+How to optimise for a supercomputer:
+    First, let's take a look at the expensive stuff
+    1) Data retrival is handled by pandas, should auto-optimise?
+    2) Is the faiss index already optimised? Could i do more?
+    3) Optuna should adapt
+    4) Calculating strategy signals could get a lot more optimised i think
+    5) The permutation could be probably optimised too

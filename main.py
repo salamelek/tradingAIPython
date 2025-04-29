@@ -30,9 +30,9 @@ from rich.progress import track
 # Get the train and validation candles
 # DURING TESTING, DON'T PUT SAME YEARS OF DATA IN THE TRAIN AND TRAIN_FAISS, SINCE THERE IS SOME CLEAR CORELATION
 faiss_train_data = getCandlesFromFolders([
-    # "./marketData/ETHUSDT-5m-2020",
-    # "./marketData/ETHUSDT-5m-2021",
-    "./marketData/ETHUSDT-5m-2022",
+    # "./marketData/BTCUSDT-5m-2020",
+    # "./marketData/BTCUSDT-5m-2021",
+    "./marketData/BTCUSDT-5m-2022",
 ])
 
 D1 = getCandlesFromFolders([
@@ -52,6 +52,12 @@ P = PFMetric()
 # create the faiss index
 tmp_s = S()
 index = faiss.IndexFlatL2(tmp_s.k)
+try:
+    res = faiss.StandardGpuResources()
+    index = faiss.index_cpu_to_gpu(res, 0, index)
+except Exception as e:
+    print(e)
+    print("No GPU for faiss, using CPU instead.")
 norm_indicators, faiss_train_data = tmp_s.get_norm_indicators(faiss_train_data)
 index.add(norm_indicators)
 
@@ -65,7 +71,7 @@ default_params = {
 
 # Optimise the strategy S on D1
 params, p1 = optimise_strategy(P, S, D1, n_trials=100, **default_params)
-# params, p1 = {'sma_window': 25, 'atr_window': 11, 'rsi_window': 24, 'max_pos_len': 11}, 1.106794342284943
+# params, p1 = {'sma_window': 82, 'atr_window': 14, 'rsi_window': 6, 'max_pos_len': 17, 'tp': 0.065, 'sl': 0.06}, 1.6957450784473715
 print(f"The best {P.name} achieved is {p1} with the parameters {params}")
 
 

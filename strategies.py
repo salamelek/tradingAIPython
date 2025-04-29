@@ -63,15 +63,18 @@ class KnnIndicatorsStrategy(Strategy):
         {"name": "atr_window", "type": "int", "low": 5, "high": 30},
         {"name": "rsi_window", "type": "int", "low": 5, "high": 30},
         {"name": "max_pos_len", "type": "int", "low": 5, "high": 500},
+        {"name": "tp", "type": "float", "low": 0, "high": 0.1},
+        {"name": "sl", "type": "float", "low": 0, "high": 0.1},
     ]
 
     def __init__(
             self,
-            k: int = 3,
             sma_window: int = 5,
             atr_window: int = 5,
             rsi_window: int = 5,
             max_pos_len: int = 24 * 12,
+            
+            k: int = 3,
             tp: float = 0.01,
             sl: float = 0.01,
             index: faiss.IndexFlatL2 = None,

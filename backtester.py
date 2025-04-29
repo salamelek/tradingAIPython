@@ -10,7 +10,7 @@ from strategies import Strategy
 from performanceMetrics import PerformanceMetric
 
 
-def optimise_strategy(P: PerformanceMetric, S: type[Strategy], D: pd.DataFrame, n_trials: int = 50, **default_params) -> (dict, float):
+def optimise_strategy(P: PerformanceMetric, S: type[Strategy], D: pd.DataFrame, n_trials: int = 50, step: float = 0.005, **default_params) -> (dict, float):
     """
     Takes a strategy and some candles.
     Optimises the strategy's parameters to yield the best performance.
@@ -23,7 +23,7 @@ def optimise_strategy(P: PerformanceMetric, S: type[Strategy], D: pd.DataFrame, 
             if p["type"] == "int":
                 params[p["name"]] = trial.suggest_int(p["name"], p["low"], p["high"])
             elif p["type"] == "float":
-                params[p["name"]] = trial.suggest_float(p["name"], p["low"], p["high"])
+                params[p["name"]] = trial.suggest_float(p["name"], p["low"], p["high"], step=step)
             elif p["type"] == "bool":
                 params[p["name"]] = trial.suggest_bool(p["name"], p["low"], p["high"])
             else:
