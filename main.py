@@ -51,7 +51,7 @@ P = PFMetric()
 
 # create the faiss index
 tmp_s = S()
-index = faiss.IndexFlatL2(tmp_s.k)
+index = faiss.IndexFlatL2(3)    # hardcoded 3 because of 3 indicators
 try:
     res = faiss.StandardGpuResources()
     index = faiss.index_cpu_to_gpu(res, 0, index)
